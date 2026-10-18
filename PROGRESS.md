@@ -1,6 +1,6 @@
 # 进度与验收
 
-更新：2026-10-18 23:39　|　测试：663 passed / 0 failed　|　对拍：112 组（1.26.4 / cv2 4.10.0 / skimage 0.25.2）
+更新：2026-10-19 00:45　|　测试：741 passed / 0 failed　|　对拍：112 组（1.26.4 / cv2 4.10.0 / skimage 0.25.2）
 
 图例：✅ 对拍通过　🟡 口径不同、差异已记录不追求一致　❌ 待查
 
@@ -36,6 +36,9 @@
 - [x] 对拍运行器 `benchmarks/run_compare.py`：误差表 / 耗时表 / 差异归因 / 对比图
 - [x] 命令行 `examples/cli.py`（list / demo / run）
 - [x] 报告模板 `benchmarks/report_template.md`
+- [x] 可视化对拍台 `gui/`（Tkinter + matplotlib）：算子树 / 参数滑块 / 实现变体 /
+      信息格视图，判定口径复用 run_compare；另加 78 条 GUI 回归测试
+      （参数表 vs 签名逐条对齐、engine 全算子、render 全视图）
 
 ## 已知差异（不粉饰，全部写在 compare.md 第 4 节）
 

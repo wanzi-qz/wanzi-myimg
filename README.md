@@ -28,6 +28,11 @@ benchmarks/       对拍运行器与报告模板（cv2 / skimage 只在这里当
   run_compare.py  跑对拍 -> out/compare.md + compare.json + 对比图
   report_template.md  机器出数字、人写归因，各占一半
 examples/cli.py   命令行入口（PIL 只读写图片，碰不到任何算子数值）
+gui/              可视化对拍台（Tkinter + matplotlib，应用层，允许用 cv2 当基准）
+  params.py       每个算子在界面上暴露哪些可调项（唯一事实源）
+  engine.py       调 myimg / OpenCV；误差与判定复用 benchmarks，不重写口径
+  render.py       2x2 四格渲染，右下信息格看「差在哪、差多少」
+  app.py          窗口 / 控件 / 事件；python -m gui 启动
 notes/            报错本、默写记录
 data/             真实图片放这里（已 gitignore，只留 README）
 PROGRESS.md       验收清单 + 面试复述清单
@@ -36,8 +41,9 @@ PROGRESS.md       验收清单 + 面试复述清单
 ## 手写纪律
 
 1. `myimg/` 下的算子文件**禁止** import `cv2` / `scipy.ndimage` / `skimage`。库只允许出现在
-   `tests/` 和 `benchmarks/` 里当基准（`examples/cli.py` 的 PIL 只负责读写图片，不参与数值）。
-   这一条破了，「手写 NumPy 实现」这个说法就不成立了。
+   `tests/`、`benchmarks/`、`gui/` 里当基准（`examples/cli.py` 的 PIL 只负责读写图片，不参与数值）。
+   后三者是应用层：基准和界面本来就该用工业库；`myimg/` 里这一条破了，
+   「手写 NumPy 实现」这个说法就不成立了。
 2. 每个函数**先写能跑的版本**（双层 for 循环也行），测试转绿之后再改写向量化。
    两版都保留，耗时差写进报告——这本身就是报告里的一节。
 3. 对不上的误差不跳过，去 `benchmarks/report_template.md` 的「差异归因」里写清楚原因。
@@ -53,6 +59,7 @@ pytest -q                       # 全部：未实现的显示 xfail，实现错�
 pytest tests/test_filters.py -k gaussian   # 单个算子
 python benchmarks/run_compare.py --all --figures   # 误差表+耗时表+对比图
 python examples/cli.py demo canny --case microscope --sigma 1.4 -o out.png
+python -m gui                     # 可视化对拍台（见下节）
 ```
 
 报告在 `benchmarks/out/compare.md`：误差表、耗时表、差异归因、已核对的口径事实四节。
@@ -65,6 +72,33 @@ python examples/cli.py demo canny --case microscope --sigma 1.4 -o out.png
 | `xfailed` | 函数体还是 `NotImplementedError`，没开始写 |
 | `failed` | 写了，但和基准对不上——去查边界处理、核归一化、dtype |
 | `passed` | 对上了，可以去默写一遍 |
+
+## 可视化对拍台（GUI）
+
+```bash
+python -m gui
+```
+
+Tkinter + matplotlib，零额外依赖（tkinter 是标准库，matplotlib 已在 dev 依赖里）。
+界面分四块：顶部工具条（用例 / 尺寸 / 打开本地图片 / 导出）、左侧算子树 +
+动态参数滑块 + 实现变体（vector / naive / 积分图）、右侧 2×2 画布、底部状态区
+（误差 / 耗时 / 口径说明 / 坑提示）。
+
+![canny 边缘叠加](gui_preview_canny.png)
+
+![连通域外接框 + 面积对比](gui_preview_stats.png)
+
+设计上有两条硬规矩：
+
+1. **判定口径不重写**。界面上的「逐像素精确 / 超出容差 / 仅记录」全部走
+   `benchmarks.run_compare.compare_one`，和 compare.md 是同一套代码算出来的，
+   不允许出现「报告说通过、界面说不通过」。
+2. **右下信息格是重点**。前三格看效果，第四格看「差在哪、差多少」：
+   边缘叠加（红=仅我的、青=仅 cv2、白=重合）、差值热图、Otsu 直方图带阈值线、
+   均衡化 CDF、连通域面积柱状 + 质心误差。参数改完 150ms 防抖自动重跑。
+
+回归测试在 `tests/test_gui_engine.py`：参数表 key 与 myimg 签名逐条对齐、
+全算子 × 默认参数 engine 不抛异常、全信息格视图 render 不崩（Agg 后端，不弹窗）。
 
 ## 对标口径（2026-10-18 本机实测，numpy 1.26.4 / opencv-python 4.10.0 / scikit-image 0.25.2）
 
