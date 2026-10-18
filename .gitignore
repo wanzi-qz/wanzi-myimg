@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+
+# 数据集与真实图片不入库，只留说明
+data/*
+!data/README.md
+
+# 对拍产物：json 保留可追溯，图片不入库
+benchmarks/out/*.png
+benchmarks/out/*.jpg

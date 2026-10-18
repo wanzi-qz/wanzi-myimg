@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "myimg"
+version = "0.1.0"
+description = "Hand-written image processing operators in pure NumPy, benchmarked against OpenCV / scikit-image"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Jiarui Wang" }]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "opencv-python>=4.8",
+    "scikit-image>=0.22",
+    "matplotlib>=3.7",
+    "pandas>=2.0",
+]
+
+[tool.setuptools]
+packages = ["myimg"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --tb=short"
+filterwarnings = ["ignore::DeprecationWarning"]

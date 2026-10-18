@@ -1,0 +1,2312 @@
+{
+  "generated_at": "2026-10-18 23:39:01",
+  "command": "python benchmarks/run_compare.py --all --figures --size 192",
+  "env": {
+    "python": "3.12.3",
+    "numpy": "1.26.4",
+    "opencv": "4.10.0",
+    "skimage": "0.25.2",
+    "platform": "Windows-11-10.0.26300-SP0"
+  },
+  "rows": [
+    {
+      "op": "box_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "flat",
+      "note": "滑动窗口均值 vs cv2.boxFilter(normalize=True, BORDER_REFLECT_101)",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 1.4210854715202004e-14,
+      "mean_abs": 1.1888638222027719e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "ramp",
+      "note": "滑动窗口均值 vs cv2.boxFilter(normalize=True, BORDER_REFLECT_101)",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "step_edge",
+      "note": "滑动窗口均值 vs cv2.boxFilter(normalize=True, BORDER_REFLECT_101)",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.842170943040401e-14,
+      "mean_abs": 2.1251205849072264e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "impulse",
+      "note": "滑动窗口均值 vs cv2.boxFilter(normalize=True, BORDER_REFLECT_101)",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.842170943040401e-14,
+      "mean_abs": 2.726407063076882e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "gauss_noise",
+      "note": "滑动窗口均值 vs cv2.boxFilter(normalize=True, BORDER_REFLECT_101)",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.842170943040401e-14,
+      "mean_abs": 2.6192397016720924e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "uneven_light",
+      "note": "滑动窗口均值 vs cv2.boxFilter(normalize=True, BORDER_REFLECT_101)",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.842170943040401e-14,
+      "mean_abs": 1.0908519458100823e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "microscope",
+      "note": "滑动窗口均值 vs cv2.boxFilter(normalize=True, BORDER_REFLECT_101)",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.842170943040401e-14,
+      "mean_abs": 2.587436437945851e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "random_uint8",
+      "note": "滑动窗口均值 vs cv2.boxFilter(normalize=True, BORDER_REFLECT_101)",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter_integral",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "flat",
+      "note": "积分图版：复杂度 O(HW) 与核尺寸无关，和滑窗版结果应完全相同",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter_integral",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 1.4210854715202004e-14,
+      "mean_abs": 1.1888638222027719e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "ramp",
+      "note": "积分图版：复杂度 O(HW) 与核尺寸无关，和滑窗版结果应完全相同",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter_integral",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "step_edge",
+      "note": "积分图版：复杂度 O(HW) 与核尺寸无关，和滑窗版结果应完全相同",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter_integral",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.842170943040401e-14,
+      "mean_abs": 2.1251205849072264e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "impulse",
+      "note": "积分图版：复杂度 O(HW) 与核尺寸无关，和滑窗版结果应完全相同",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter_integral",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.842170943040401e-14,
+      "mean_abs": 2.726407063076882e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "gauss_noise",
+      "note": "积分图版：复杂度 O(HW) 与核尺寸无关，和滑窗版结果应完全相同",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter_integral",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.842170943040401e-14,
+      "mean_abs": 2.6192397016720924e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "uneven_light",
+      "note": "积分图版：复杂度 O(HW) 与核尺寸无关，和滑窗版结果应完全相同",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter_integral",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.842170943040401e-14,
+      "mean_abs": 1.0908519458100823e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "microscope",
+      "note": "积分图版：复杂度 O(HW) 与核尺寸无关，和滑窗版结果应完全相同",
+      "tol": 1e-08
+    },
+    {
+      "op": "box_filter_integral",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.842170943040401e-14,
+      "mean_abs": 2.587436437945851e-15,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "random_uint8",
+      "note": "积分图版：复杂度 O(HW) 与核尺寸无关，和滑窗版结果应完全相同",
+      "tol": 1e-08
+    },
+    {
+      "op": "gaussian_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 4.263256414560601e-14,
+      "mean_abs": 4.263256414560601e-14,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "flat",
+      "note": "可分离两次一维相关；自动核尺寸按 OpenCV 的 ±4σ 约定",
+      "tol": 1e-08
+    },
+    {
+      "op": "gaussian_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 1.7053025658242404e-13,
+      "mean_abs": 5.72632219419944e-14,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "ramp",
+      "note": "可分离两次一维相关；自动核尺寸按 OpenCV 的 ±4σ 约定",
+      "tol": 1e-08
+    },
+    {
+      "op": "gaussian_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 1.7053025658242404e-13,
+      "mean_abs": 1.746750892076913e-14,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "step_edge",
+      "note": "可分离两次一维相关；自动核尺寸按 OpenCV 的 ±4σ 约定",
+      "tol": 1e-08
+    },
+    {
+      "op": "gaussian_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.2737367544323206e-13,
+      "mean_abs": 5.909682164442919e-14,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "impulse",
+      "note": "可分离两次一维相关；自动核尺寸按 OpenCV 的 ±4σ 约定",
+      "tol": 1e-08
+    },
+    {
+      "op": "gaussian_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 1.9895196601282805e-13,
+      "mean_abs": 6.269907432749417e-14,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "gauss_noise",
+      "note": "可分离两次一维相关；自动核尺寸按 OpenCV 的 ±4σ 约定",
+      "tol": 1e-08
+    },
+    {
+      "op": "gaussian_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 1.9895196601282805e-13,
+      "mean_abs": 5.97183375281338e-14,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "uneven_light",
+      "note": "可分离两次一维相关；自动核尺寸按 OpenCV 的 ±4σ 约定",
+      "tol": 1e-08
+    },
+    {
+      "op": "gaussian_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 1.9895196601282805e-13,
+      "mean_abs": 2.486118949596161e-14,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "microscope",
+      "note": "可分离两次一维相关；自动核尺寸按 OpenCV 的 ±4σ 约定",
+      "tol": 1e-08
+    },
+    {
+      "op": "gaussian_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 1.7053025658242404e-13,
+      "mean_abs": 6.123381123145243e-14,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": false,
+      "verdict": "浮点噪声级一致",
+      "case": "random_uint8",
+      "note": "可分离两次一维相关；自动核尺寸按 OpenCV 的 ±4σ 约定",
+      "tol": 1e-08
+    },
+    {
+      "op": "median_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "flat",
+      "note": "cv2.medianBlur 边界固定 REPLICATE，myimg 默认 mode='edge' 与之对齐",
+      "tol": 0.0
+    },
+    {
+      "op": "median_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "ramp",
+      "note": "cv2.medianBlur 边界固定 REPLICATE，myimg 默认 mode='edge' 与之对齐",
+      "tol": 0.0
+    },
+    {
+      "op": "median_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "step_edge",
+      "note": "cv2.medianBlur 边界固定 REPLICATE，myimg 默认 mode='edge' 与之对齐",
+      "tol": 0.0
+    },
+    {
+      "op": "median_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "impulse",
+      "note": "cv2.medianBlur 边界固定 REPLICATE，myimg 默认 mode='edge' 与之对齐",
+      "tol": 0.0
+    },
+    {
+      "op": "median_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "gauss_noise",
+      "note": "cv2.medianBlur 边界固定 REPLICATE，myimg 默认 mode='edge' 与之对齐",
+      "tol": 0.0
+    },
+    {
+      "op": "median_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "uneven_light",
+      "note": "cv2.medianBlur 边界固定 REPLICATE，myimg 默认 mode='edge' 与之对齐",
+      "tol": 0.0
+    },
+    {
+      "op": "median_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "microscope",
+      "note": "cv2.medianBlur 边界固定 REPLICATE，myimg 默认 mode='edge' 与之对齐",
+      "tol": 0.0
+    },
+    {
+      "op": "median_filter",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "random_uint8",
+      "note": "cv2.medianBlur 边界固定 REPLICATE，myimg 默认 mode='edge' 与之对齐",
+      "tol": 0.0
+    },
+    {
+      "op": "histogram",
+      "case_kind": "gray",
+      "kind": "counts",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        256
+      ],
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "flat",
+      "note": "np.bincount vs cv2.calcHist",
+      "tol": 0.0
+    },
+    {
+      "op": "histogram",
+      "case_kind": "gray",
+      "kind": "counts",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        256
+      ],
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "ramp",
+      "note": "np.bincount vs cv2.calcHist",
+      "tol": 0.0
+    },
+    {
+      "op": "histogram",
+      "case_kind": "gray",
+      "kind": "counts",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        256
+      ],
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "step_edge",
+      "note": "np.bincount vs cv2.calcHist",
+      "tol": 0.0
+    },
+    {
+      "op": "histogram",
+      "case_kind": "gray",
+      "kind": "counts",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        256
+      ],
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "impulse",
+      "note": "np.bincount vs cv2.calcHist",
+      "tol": 0.0
+    },
+    {
+      "op": "histogram",
+      "case_kind": "gray",
+      "kind": "counts",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        256
+      ],
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "gauss_noise",
+      "note": "np.bincount vs cv2.calcHist",
+      "tol": 0.0
+    },
+    {
+      "op": "histogram",
+      "case_kind": "gray",
+      "kind": "counts",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        256
+      ],
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "uneven_light",
+      "note": "np.bincount vs cv2.calcHist",
+      "tol": 0.0
+    },
+    {
+      "op": "histogram",
+      "case_kind": "gray",
+      "kind": "counts",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        256
+      ],
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "microscope",
+      "note": "np.bincount vs cv2.calcHist",
+      "tol": 0.0
+    },
+    {
+      "op": "histogram",
+      "case_kind": "gray",
+      "kind": "counts",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        256
+      ],
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "random_uint8",
+      "note": "np.bincount vs cv2.calcHist",
+      "tol": 0.0
+    },
+    {
+      "op": "otsu_threshold",
+      "case_kind": "gray",
+      "kind": "scalar",
+      "mine": 0.0,
+      "ref": 0.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "flat",
+      "note": "类间方差递推 O(256)；平局取最小 t。容差 1 灰阶是给两家平局约定的余量",
+      "tol": 1.0
+    },
+    {
+      "op": "otsu_threshold",
+      "case_kind": "gray",
+      "kind": "scalar",
+      "mine": 126.0,
+      "ref": 126.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "ramp",
+      "note": "类间方差递推 O(256)；平局取最小 t。容差 1 灰阶是给两家平局约定的余量",
+      "tol": 1.0
+    },
+    {
+      "op": "otsu_threshold",
+      "case_kind": "gray",
+      "kind": "scalar",
+      "mine": 40.0,
+      "ref": 40.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "step_edge",
+      "note": "类间方差递推 O(256)；平局取最小 t。容差 1 灰阶是给两家平局约定的余量",
+      "tol": 1.0
+    },
+    {
+      "op": "otsu_threshold",
+      "case_kind": "gray",
+      "kind": "scalar",
+      "mine": 126.0,
+      "ref": 126.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "impulse",
+      "note": "类间方差递推 O(256)；平局取最小 t。容差 1 灰阶是给两家平局约定的余量",
+      "tol": 1.0
+    },
+    {
+      "op": "otsu_threshold",
+      "case_kind": "gray",
+      "kind": "scalar",
+      "mine": 130.0,
+      "ref": 130.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "gauss_noise",
+      "note": "类间方差递推 O(256)；平局取最小 t。容差 1 灰阶是给两家平局约定的余量",
+      "tol": 1.0
+    },
+    {
+      "op": "otsu_threshold",
+      "case_kind": "gray",
+      "kind": "scalar",
+      "mine": 125.0,
+      "ref": 125.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "uneven_light",
+      "note": "类间方差递推 O(256)；平局取最小 t。容差 1 灰阶是给两家平局约定的余量",
+      "tol": 1.0
+    },
+    {
+      "op": "otsu_threshold",
+      "case_kind": "gray",
+      "kind": "scalar",
+      "mine": 83.0,
+      "ref": 83.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "microscope",
+      "note": "类间方差递推 O(256)；平局取最小 t。容差 1 灰阶是给两家平局约定的余量",
+      "tol": 1.0
+    },
+    {
+      "op": "otsu_threshold",
+      "case_kind": "gray",
+      "kind": "scalar",
+      "mine": 127.0,
+      "ref": 127.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "random_uint8",
+      "note": "类间方差递推 O(256)；平局取最小 t。容差 1 灰阶是给两家平局约定的余量",
+      "tol": 1.0
+    },
+    {
+      "op": "hist_equalize",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "flat",
+      "note": "s = round((CDF - CDF_min) * 255 / (total - CDF_min))，取整用 floor(x+0.5)",
+      "tol": 0.0
+    },
+    {
+      "op": "hist_equalize",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "ramp",
+      "note": "s = round((CDF - CDF_min) * 255 / (total - CDF_min))，取整用 floor(x+0.5)",
+      "tol": 0.0
+    },
+    {
+      "op": "hist_equalize",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "step_edge",
+      "note": "s = round((CDF - CDF_min) * 255 / (total - CDF_min))，取整用 floor(x+0.5)",
+      "tol": 0.0
+    },
+    {
+      "op": "hist_equalize",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "impulse",
+      "note": "s = round((CDF - CDF_min) * 255 / (total - CDF_min))，取整用 floor(x+0.5)",
+      "tol": 0.0
+    },
+    {
+      "op": "hist_equalize",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "gauss_noise",
+      "note": "s = round((CDF - CDF_min) * 255 / (total - CDF_min))，取整用 floor(x+0.5)",
+      "tol": 0.0
+    },
+    {
+      "op": "hist_equalize",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "uneven_light",
+      "note": "s = round((CDF - CDF_min) * 255 / (total - CDF_min))，取整用 floor(x+0.5)",
+      "tol": 0.0
+    },
+    {
+      "op": "hist_equalize",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "microscope",
+      "note": "s = round((CDF - CDF_min) * 255 / (total - CDF_min))，取整用 floor(x+0.5)",
+      "tol": 0.0
+    },
+    {
+      "op": "hist_equalize",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "random_uint8",
+      "note": "s = round((CDF - CDF_min) * 255 / (total - CDF_min))，取整用 floor(x+0.5)",
+      "tol": 0.0
+    },
+    {
+      "op": "clahe",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.0,
+      "mean_abs": 2.0,
+      "shape": [
+        192,
+        192
+      ],
+      "exact": false,
+      "verdict": "仅记录",
+      "case": "flat",
+      "note": "口径不同，不追求逐像素一致：削峰后的重分配次数、超出部分怎么摊、tile 边界插值的取样点三家都不一样。只记录差异量级并归因",
+      "tol": null
+    },
+    {
+      "op": "clahe",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 10.0,
+      "mean_abs": 6.568657769097222,
+      "shape": [
+        192,
+        192
+      ],
+      "exact": false,
+      "verdict": "仅记录",
+      "case": "ramp",
+      "note": "口径不同，不追求逐像素一致：削峰后的重分配次数、超出部分怎么摊、tile 边界插值的取样点三家都不一样。只记录差异量级并归因",
+      "tol": null
+    },
+    {
+      "op": "clahe",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 2.0,
+      "mean_abs": 1.46875,
+      "shape": [
+        192,
+        192
+      ],
+      "exact": false,
+      "verdict": "仅记录",
+      "case": "step_edge",
+      "note": "口径不同，不追求逐像素一致：削峰后的重分配次数、超出部分怎么摊、tile 边界插值的取样点三家都不一样。只记录差异量级并归因",
+      "tol": null
+    },
+    {
+      "op": "clahe",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 11.0,
+      "mean_abs": 7.556233723958333,
+      "shape": [
+        192,
+        192
+      ],
+      "exact": false,
+      "verdict": "仅记录",
+      "case": "impulse",
+      "note": "口径不同，不追求逐像素一致：削峰后的重分配次数、超出部分怎么摊、tile 边界插值的取样点三家都不一样。只记录差异量级并归因",
+      "tol": null
+    },
+    {
+      "op": "clahe",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 28.0,
+      "mean_abs": 14.76193576388889,
+      "shape": [
+        192,
+        192
+      ],
+      "exact": false,
+      "verdict": "仅记录",
+      "case": "gauss_noise",
+      "note": "口径不同，不追求逐像素一致：削峰后的重分配次数、超出部分怎么摊、tile 边界插值的取样点三家都不一样。只记录差异量级并归因",
+      "tol": null
+    },
+    {
+      "op": "clahe",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 35.0,
+      "mean_abs": 16.77712673611111,
+      "shape": [
+        192,
+        192
+      ],
+      "exact": false,
+      "verdict": "仅记录",
+      "case": "uneven_light",
+      "note": "口径不同，不追求逐像素一致：削峰后的重分配次数、超出部分怎么摊、tile 边界插值的取样点三家都不一样。只记录差异量级并归因",
+      "tol": null
+    },
+    {
+      "op": "clahe",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 26.0,
+      "mean_abs": 7.679741753472222,
+      "shape": [
+        192,
+        192
+      ],
+      "exact": false,
+      "verdict": "仅记录",
+      "case": "microscope",
+      "note": "口径不同，不追求逐像素一致：削峰后的重分配次数、超出部分怎么摊、tile 边界插值的取样点三家都不一样。只记录差异量级并归因",
+      "tol": null
+    },
+    {
+      "op": "clahe",
+      "case_kind": "gray",
+      "kind": "image",
+      "max_abs": 3.0,
+      "mean_abs": 0.5141872829861112,
+      "shape": [
+        192,
+        192
+      ],
+      "exact": false,
+      "verdict": "仅记录",
+      "case": "random_uint8",
+      "note": "口径不同，不追求逐像素一致：削峰后的重分配次数、超出部分怎么摊、tile 边界插值的取样点三家都不一样。只记录差异量级并归因",
+      "tol": null
+    },
+    {
+      "op": "sobel",
+      "case_kind": "gray",
+      "kind": "tuple3",
+      "per_component": {
+        "gx": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "gy": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "mag": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        }
+      },
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "flat",
+      "note": "可分离：先 [1,2,1] 平滑再 [-1,0,1] 差分，中间量必须 float",
+      "tol": 1e-08
+    },
+    {
+      "op": "sobel",
+      "case_kind": "gray",
+      "kind": "tuple3",
+      "per_component": {
+        "gx": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "gy": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "mag": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        }
+      },
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "ramp",
+      "note": "可分离：先 [1,2,1] 平滑再 [-1,0,1] 差分，中间量必须 float",
+      "tol": 1e-08
+    },
+    {
+      "op": "sobel",
+      "case_kind": "gray",
+      "kind": "tuple3",
+      "per_component": {
+        "gx": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "gy": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "mag": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        }
+      },
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "step_edge",
+      "note": "可分离：先 [1,2,1] 平滑再 [-1,0,1] 差分，中间量必须 float",
+      "tol": 1e-08
+    },
+    {
+      "op": "sobel",
+      "case_kind": "gray",
+      "kind": "tuple3",
+      "per_component": {
+        "gx": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "gy": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "mag": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        }
+      },
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "impulse",
+      "note": "可分离：先 [1,2,1] 平滑再 [-1,0,1] 差分，中间量必须 float",
+      "tol": 1e-08
+    },
+    {
+      "op": "sobel",
+      "case_kind": "gray",
+      "kind": "tuple3",
+      "per_component": {
+        "gx": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "gy": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "mag": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        }
+      },
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "gauss_noise",
+      "note": "可分离：先 [1,2,1] 平滑再 [-1,0,1] 差分，中间量必须 float",
+      "tol": 1e-08
+    },
+    {
+      "op": "sobel",
+      "case_kind": "gray",
+      "kind": "tuple3",
+      "per_component": {
+        "gx": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "gy": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "mag": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        }
+      },
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "uneven_light",
+      "note": "可分离：先 [1,2,1] 平滑再 [-1,0,1] 差分，中间量必须 float",
+      "tol": 1e-08
+    },
+    {
+      "op": "sobel",
+      "case_kind": "gray",
+      "kind": "tuple3",
+      "per_component": {
+        "gx": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "gy": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "mag": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        }
+      },
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "microscope",
+      "note": "可分离：先 [1,2,1] 平滑再 [-1,0,1] 差分，中间量必须 float",
+      "tol": 1e-08
+    },
+    {
+      "op": "sobel",
+      "case_kind": "gray",
+      "kind": "tuple3",
+      "per_component": {
+        "gx": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "gy": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        },
+        "mag": {
+          "max_abs": 0.0,
+          "mean_abs": 0.0,
+          "shape": [
+            192,
+            192
+          ],
+          "exact": true
+        }
+      },
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "random_uint8",
+      "note": "可分离：先 [1,2,1] 平滑再 [-1,0,1] 差分，中间量必须 float",
+      "tol": 1e-08
+    },
+    {
+      "op": "canny",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 0,
+      "ref_px": 0,
+      "iou": 1.0,
+      "both_empty": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "两边都无边缘",
+      "case": "flat",
+      "note": "OpenCV 用亚像素插值做非极大值抑制，myimg 用 4 扇区量化，边缘位置会差半个像素，所以比 IoU 不比逐像素",
+      "tol": null
+    },
+    {
+      "op": "canny",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 0,
+      "ref_px": 0,
+      "iou": 1.0,
+      "both_empty": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "两边都无边缘",
+      "case": "ramp",
+      "note": "OpenCV 用亚像素插值做非极大值抑制，myimg 用 4 扇区量化，边缘位置会差半个像素，所以比 IoU 不比逐像素",
+      "tol": null
+    },
+    {
+      "op": "canny",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 192,
+      "ref_px": 192,
+      "iou": 1.0,
+      "both_empty": false,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "IoU 合格",
+      "case": "step_edge",
+      "note": "OpenCV 用亚像素插值做非极大值抑制，myimg 用 4 扇区量化，边缘位置会差半个像素，所以比 IoU 不比逐像素",
+      "tol": null
+    },
+    {
+      "op": "canny",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 6715,
+      "ref_px": 6749,
+      "iou": 0.8231550440081246,
+      "both_empty": false,
+      "max_abs": 255.0,
+      "mean_abs": 9.034016927083334,
+      "exact": false,
+      "verdict": "IoU 合格",
+      "case": "impulse",
+      "note": "OpenCV 用亚像素插值做非极大值抑制，myimg 用 4 扇区量化，边缘位置会差半个像素，所以比 IoU 不比逐像素",
+      "tol": null
+    },
+    {
+      "op": "canny",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 11922,
+      "ref_px": 13021,
+      "iou": 0.6420671494404213,
+      "both_empty": false,
+      "max_abs": 255.0,
+      "mean_abs": 37.609456380208336,
+      "exact": false,
+      "verdict": "IoU 合格",
+      "case": "gauss_noise",
+      "note": "OpenCV 用亚像素插值做非极大值抑制，myimg 用 4 扇区量化，边缘位置会差半个像素，所以比 IoU 不比逐像素",
+      "tol": null
+    },
+    {
+      "op": "canny",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 0,
+      "ref_px": 0,
+      "iou": 1.0,
+      "both_empty": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "两边都无边缘",
+      "case": "uneven_light",
+      "note": "OpenCV 用亚像素插值做非极大值抑制，myimg 用 4 扇区量化，边缘位置会差半个像素，所以比 IoU 不比逐像素",
+      "tol": null
+    },
+    {
+      "op": "canny",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 12181,
+      "ref_px": 12774,
+      "iou": 0.634678370234508,
+      "both_empty": false,
+      "max_abs": 255.0,
+      "mean_abs": 38.577880859375,
+      "exact": false,
+      "verdict": "IoU 合格",
+      "case": "microscope",
+      "note": "OpenCV 用亚像素插值做非极大值抑制，myimg 用 4 扇区量化，边缘位置会差半个像素，所以比 IoU 不比逐像素",
+      "tol": null
+    },
+    {
+      "op": "canny",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 13622,
+      "ref_px": 13765,
+      "iou": 0.6880547337278107,
+      "both_empty": false,
+      "max_abs": 255.0,
+      "mean_abs": 35.008544921875,
+      "exact": false,
+      "verdict": "IoU 合格",
+      "case": "random_uint8",
+      "note": "OpenCV 用亚像素插值做非极大值抑制，myimg 用 4 扇区量化，边缘位置会差半个像素，所以比 IoU 不比逐像素",
+      "tol": null
+    },
+    {
+      "op": "canny_smoothed",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 0,
+      "ref_px": 0,
+      "iou": 1.0,
+      "both_empty": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "仅记录",
+      "case": "flat",
+      "note": "带预平滑的 Canny。cv2.Canny 自己没有 sigma 参数，基准只能是「cv2.GaussianBlur(uint8) + cv2.Canny」，uint8 取整 + 亚像素 NMS 两处口径都和 myimg 不同，IoU 在这里没有判定意义，只记录",
+      "tol": null
+    },
+    {
+      "op": "canny_smoothed",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 0,
+      "ref_px": 0,
+      "iou": 1.0,
+      "both_empty": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "仅记录",
+      "case": "ramp",
+      "note": "带预平滑的 Canny。cv2.Canny 自己没有 sigma 参数，基准只能是「cv2.GaussianBlur(uint8) + cv2.Canny」，uint8 取整 + 亚像素 NMS 两处口径都和 myimg 不同，IoU 在这里没有判定意义，只记录",
+      "tol": null
+    },
+    {
+      "op": "canny_smoothed",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 192,
+      "ref_px": 192,
+      "iou": 0.0,
+      "both_empty": false,
+      "max_abs": 255.0,
+      "mean_abs": 2.65625,
+      "exact": false,
+      "verdict": "仅记录",
+      "case": "step_edge",
+      "note": "带预平滑的 Canny。cv2.Canny 自己没有 sigma 参数，基准只能是「cv2.GaussianBlur(uint8) + cv2.Canny」，uint8 取整 + 亚像素 NMS 两处口径都和 myimg 不同，IoU 在这里没有判定意义，只记录",
+      "tol": null
+    },
+    {
+      "op": "canny_smoothed",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 0,
+      "ref_px": 0,
+      "iou": 1.0,
+      "both_empty": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "仅记录",
+      "case": "impulse",
+      "note": "带预平滑的 Canny。cv2.Canny 自己没有 sigma 参数，基准只能是「cv2.GaussianBlur(uint8) + cv2.Canny」，uint8 取整 + 亚像素 NMS 两处口径都和 myimg 不同，IoU 在这里没有判定意义，只记录",
+      "tol": null
+    },
+    {
+      "op": "canny_smoothed",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 0,
+      "ref_px": 0,
+      "iou": 1.0,
+      "both_empty": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "仅记录",
+      "case": "gauss_noise",
+      "note": "带预平滑的 Canny。cv2.Canny 自己没有 sigma 参数，基准只能是「cv2.GaussianBlur(uint8) + cv2.Canny」，uint8 取整 + 亚像素 NMS 两处口径都和 myimg 不同，IoU 在这里没有判定意义，只记录",
+      "tol": null
+    },
+    {
+      "op": "canny_smoothed",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 0,
+      "ref_px": 0,
+      "iou": 1.0,
+      "both_empty": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "仅记录",
+      "case": "uneven_light",
+      "note": "带预平滑的 Canny。cv2.Canny 自己没有 sigma 参数，基准只能是「cv2.GaussianBlur(uint8) + cv2.Canny」，uint8 取整 + 亚像素 NMS 两处口径都和 myimg 不同，IoU 在这里没有判定意义，只记录",
+      "tol": null
+    },
+    {
+      "op": "canny_smoothed",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 114,
+      "ref_px": 220,
+      "iou": 0.1971326164874552,
+      "both_empty": false,
+      "max_abs": 255.0,
+      "mean_abs": 1.5494791666666667,
+      "exact": false,
+      "verdict": "仅记录",
+      "case": "microscope",
+      "note": "带预平滑的 Canny。cv2.Canny 自己没有 sigma 参数，基准只能是「cv2.GaussianBlur(uint8) + cv2.Canny」，uint8 取整 + 亚像素 NMS 两处口径都和 myimg 不同，IoU 在这里没有判定意义，只记录",
+      "tol": null
+    },
+    {
+      "op": "canny_smoothed",
+      "case_kind": "gray",
+      "kind": "iou",
+      "mine_px": 1111,
+      "ref_px": 7592,
+      "iou": 0.11863753213367609,
+      "both_empty": false,
+      "max_abs": 255.0,
+      "mean_abs": 47.432047526041664,
+      "exact": false,
+      "verdict": "仅记录",
+      "case": "random_uint8",
+      "note": "带预平滑的 Canny。cv2.Canny 自己没有 sigma 参数，基准只能是「cv2.GaussianBlur(uint8) + cv2.Canny」，uint8 取整 + 亚像素 NMS 两处口径都和 myimg 不同，IoU 在这里没有判定意义，只记录",
+      "tol": null
+    },
+    {
+      "op": "erode",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "blobs",
+      "note": "边界 pad True（cv2 的 +inf）",
+      "tol": 0.0
+    },
+    {
+      "op": "erode",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "holes",
+      "note": "边界 pad True（cv2 的 +inf）",
+      "tol": 0.0
+    },
+    {
+      "op": "erode",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "checker",
+      "note": "边界 pad True（cv2 的 +inf）",
+      "tol": 0.0
+    },
+    {
+      "op": "erode",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "two_touching",
+      "note": "边界 pad True（cv2 的 +inf）",
+      "tol": 0.0
+    },
+    {
+      "op": "dilate",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "blobs",
+      "note": "边界 pad False（cv2 的 -inf）",
+      "tol": 0.0
+    },
+    {
+      "op": "dilate",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "holes",
+      "note": "边界 pad False（cv2 的 -inf）",
+      "tol": 0.0
+    },
+    {
+      "op": "dilate",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "checker",
+      "note": "边界 pad False（cv2 的 -inf）",
+      "tol": 0.0
+    },
+    {
+      "op": "dilate",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "two_touching",
+      "note": "边界 pad False（cv2 的 -inf）",
+      "tol": 0.0
+    },
+    {
+      "op": "morph_open",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "blobs",
+      "note": "先腐蚀后膨胀",
+      "tol": 0.0
+    },
+    {
+      "op": "morph_open",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "holes",
+      "note": "先腐蚀后膨胀",
+      "tol": 0.0
+    },
+    {
+      "op": "morph_open",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "checker",
+      "note": "先腐蚀后膨胀",
+      "tol": 0.0
+    },
+    {
+      "op": "morph_open",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "two_touching",
+      "note": "先腐蚀后膨胀",
+      "tol": 0.0
+    },
+    {
+      "op": "morph_close",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "blobs",
+      "note": "先膨胀后腐蚀",
+      "tol": 0.0
+    },
+    {
+      "op": "morph_close",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "holes",
+      "note": "先膨胀后腐蚀",
+      "tol": 0.0
+    },
+    {
+      "op": "morph_close",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "checker",
+      "note": "先膨胀后腐蚀",
+      "tol": 0.0
+    },
+    {
+      "op": "morph_close",
+      "case_kind": "binary",
+      "kind": "image",
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "shape": [
+        192,
+        192
+      ],
+      "n_over_tol": 0,
+      "pct_over_tol": 0.0,
+      "exact": true,
+      "verdict": "逐像素精确",
+      "case": "two_touching",
+      "note": "先膨胀后腐蚀",
+      "tol": 0.0
+    },
+    {
+      "op": "label_components",
+      "case_kind": "binary",
+      "kind": "labels",
+      "mine_n": 13,
+      "ref_n": 13,
+      "areas_match": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "一致",
+      "top_areas": [
+        4649,
+        1157,
+        565,
+        1,
+        1
+      ],
+      "case": "blobs",
+      "note": "两遍扫描 + 并查集。编号顺序不保证和 cv2 一致，比的是个数与面积多重集合",
+      "tol": 0.0
+    },
+    {
+      "op": "label_components",
+      "case_kind": "binary",
+      "kind": "labels",
+      "mine_n": 1,
+      "ref_n": 1,
+      "areas_match": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "一致",
+      "top_areas": [
+        8880
+      ],
+      "case": "holes",
+      "note": "两遍扫描 + 并查集。编号顺序不保证和 cv2 一致，比的是个数与面积多重集合",
+      "tol": 0.0
+    },
+    {
+      "op": "label_components",
+      "case_kind": "binary",
+      "kind": "labels",
+      "mine_n": 1,
+      "ref_n": 1,
+      "areas_match": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "一致",
+      "top_areas": [
+        18432
+      ],
+      "case": "checker",
+      "note": "两遍扫描 + 并查集。编号顺序不保证和 cv2 一致，比的是个数与面积多重集合",
+      "tol": 0.0
+    },
+    {
+      "op": "label_components",
+      "case_kind": "binary",
+      "kind": "labels",
+      "mine_n": 2,
+      "ref_n": 2,
+      "areas_match": true,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "一致",
+      "top_areas": [
+        3753,
+        3753
+      ],
+      "case": "two_touching",
+      "note": "两遍扫描 + 并查集。编号顺序不保证和 cv2 一致，比的是个数与面积多重集合",
+      "tol": 0.0
+    },
+    {
+      "op": "region_stats",
+      "case_kind": "binary",
+      "kind": "stats",
+      "n_regions": 13,
+      "max_box_err": 0,
+      "max_centroid_err": 0.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "一致",
+      "case": "blobs",
+      "note": "面积 / 外接框 / 质心 vs cv2.connectedComponentsWithStats",
+      "tol": 0.0
+    },
+    {
+      "op": "region_stats",
+      "case_kind": "binary",
+      "kind": "stats",
+      "n_regions": 1,
+      "max_box_err": 0,
+      "max_centroid_err": 0.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "一致",
+      "case": "holes",
+      "note": "面积 / 外接框 / 质心 vs cv2.connectedComponentsWithStats",
+      "tol": 0.0
+    },
+    {
+      "op": "region_stats",
+      "case_kind": "binary",
+      "kind": "stats",
+      "n_regions": 1,
+      "max_box_err": 0,
+      "max_centroid_err": 0.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "一致",
+      "case": "checker",
+      "note": "面积 / 外接框 / 质心 vs cv2.connectedComponentsWithStats",
+      "tol": 0.0
+    },
+    {
+      "op": "region_stats",
+      "case_kind": "binary",
+      "kind": "stats",
+      "n_regions": 2,
+      "max_box_err": 0,
+      "max_centroid_err": 0.0,
+      "max_abs": 0.0,
+      "mean_abs": 0.0,
+      "exact": true,
+      "verdict": "一致",
+      "case": "two_touching",
+      "note": "面积 / 外接框 / 质心 vs cv2.connectedComponentsWithStats",
+      "tol": 0.0
+    }
+  ],
+  "timing": {
+    "size": 192,
+    "naive_size": 64,
+    "repeats": 3,
+    "rows": [
+      {
+        "op": "box_filter",
+        "size": 192,
+        "mine_ms": 1.5519000007770956,
+        "ref_ms": 0.06359996041283011,
+        "mine_px": 36864,
+        "naive_size": 64,
+        "naive_ms": 13.337200041860342,
+        "naive_px": 4096,
+        "naive_us_per_px": 3.25615235396981,
+        "mine_us_per_px": 0.0420979817919134,
+        "vec_speedup": 77.3469942113777,
+        "ref_us_per_px": 0.0017252593427959557,
+        "vs_opencv": 24.400958596572153
+      },
+      {
+        "op": "box_filter_integral",
+        "size": 192,
+        "mine_ms": 1.0131000308319926,
+        "ref_ms": 0.06539997411891818,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.0017740878395973898,
+        "vs_opencv": 15.490832289778144
+      },
+      {
+        "op": "gaussian_filter",
+        "size": 192,
+        "mine_ms": 0.3629999700933695,
+        "ref_ms": 0.16830000095069408,
+        "mine_px": 36864,
+        "naive_size": 64,
+        "naive_ms": 11.863700055982918,
+        "naive_px": 4096,
+        "naive_us_per_px": 2.8964111464802045,
+        "mine_us_per_px": 0.00984700439706406,
+        "vec_speedup": 294.14134793560015,
+        "ref_us_per_px": 0.004565429713289227,
+        "vs_opencv": 2.1568625552160015
+      },
+      {
+        "op": "median_filter",
+        "size": 192,
+        "mine_ms": 15.38360002450645,
+        "ref_ms": 0.47960004303604364,
+        "mine_px": 36864,
+        "naive_size": 64,
+        "naive_ms": 43.64079999504611,
+        "naive_px": 4096,
+        "naive_us_per_px": 10.654492186290554,
+        "mine_us_per_px": 0.41730685830366887,
+        "vec_speedup": 25.53155303893284,
+        "ref_us_per_px": 0.013009983806316287,
+        "vs_opencv": 32.07589375330877
+      },
+      {
+        "op": "histogram",
+        "size": 192,
+        "mine_ms": 0.09089999366551638,
+        "ref_ms": 0.013400043826550245,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.00036349945276015205,
+        "vs_opencv": 6.783559430261803
+      },
+      {
+        "op": "otsu_threshold",
+        "size": 192,
+        "mine_ms": 0.2565000322647393,
+        "ref_ms": 0.010400020983070135,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.0002821186247577619,
+        "vs_opencv": 24.663414879862987
+      },
+      {
+        "op": "hist_equalize",
+        "size": 192,
+        "mine_ms": 0.15679997159168124,
+        "ref_ms": 0.031299947295337915,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.0008490654105723175,
+        "vs_opencv": 5.009592192349678
+      },
+      {
+        "op": "clahe",
+        "size": 192,
+        "mine_ms": 6.255500018596649,
+        "ref_ms": 0.06019999273121357,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.0016330293167104376,
+        "vs_opencv": 103.91197298854797
+      },
+      {
+        "op": "sobel",
+        "size": 192,
+        "mine_ms": 0.19859999883919954,
+        "ref_ms": 0.16339996363967657,
+        "mine_px": 36864,
+        "naive_size": 64,
+        "naive_ms": 25.95169999403879,
+        "naive_px": 4096,
+        "naive_us_per_px": 6.335864256357127,
+        "mine_us_per_px": 0.005387369760177939,
+        "vec_speedup": 1176.058918990528,
+        "ref_us_per_px": 0.004432507694218657,
+        "vs_opencv": 1.2154225399777001
+      },
+      {
+        "op": "canny",
+        "size": 192,
+        "mine_ms": 4.833399958442897,
+        "ref_ms": 0.29120000544935465,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.00789930570337876,
+        "vs_opencv": 16.598213832394723
+      },
+      {
+        "op": "canny_smoothed",
+        "size": 192,
+        "mine_ms": 5.100500013213605,
+        "ref_ms": 0.0847000046633184,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.0022976346751117185,
+        "vs_opencv": 60.21841478625694
+      },
+      {
+        "op": "erode",
+        "size": 192,
+        "mine_ms": 0.7646000012755394,
+        "ref_ms": 0.028799986466765404,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.0007812496328875164,
+        "vs_opencv": 26.548623630704554
+      },
+      {
+        "op": "dilate",
+        "size": 192,
+        "mine_ms": 0.9122000192292035,
+        "ref_ms": 0.024800014216452837,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.0006727434412015201,
+        "vs_opencv": 36.782237754687706
+      },
+      {
+        "op": "morph_open",
+        "size": 192,
+        "mine_ms": 1.6775000258348882,
+        "ref_ms": 0.03260001540184021,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.0008843320150238773,
+        "vs_opencv": 51.457031696377555
+      },
+      {
+        "op": "morph_close",
+        "size": 192,
+        "mine_ms": 2.8128999983891845,
+        "ref_ms": 0.037100049667060375,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.0010064032570274624,
+        "vs_opencv": 75.81930546272675
+      },
+      {
+        "op": "label_components",
+        "size": 192,
+        "mine_ms": 26.109900034498423,
+        "ref_ms": 0.09499996667727828,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.002577039026618877,
+        "vs_opencv": 274.84114939951115
+      },
+      {
+        "op": "region_stats",
+        "size": 192,
+        "mine_ms": 26.294699986465275,
+        "ref_ms": 0.13100000796839595,
+        "mine_px": 36864,
+        "ref_us_per_px": 0.0035536026467121295,
+        "vs_opencv": 200.7228884505788
+      }
+    ]
+  },
+  "facts": [
+    "`np.pad(mode='reflect')` == `cv2.BORDER_REFLECT_101`；`'symmetric'` == `BORDER_REFLECT`；`'edge'` == `BORDER_REPLICATE`。而 scipy / skimage 的 `'reflect'` 指含边缘的对称填充（= `BORDER_REFLECT`），`'mirror'` 才是 `REFLECT_101` —— 三家命名互不兼容。",
+    "OpenCV 高斯的自动核尺寸是 `ksize = 2 * floor(4σ + 0.5) + 1`（±4σ 截断），**不是**网上流传的 ±3σ。实测命中表：σ = 0.3/0.5/0.8/1.0/1.4/1.5/2.0/2.5/3.0 → ksize = 3/5/7/9/13/13/17/21/25。用 ±3σ 时 σ=1.0 会得到 7 而 OpenCV 是 9，对拍直接不过。",
+    "`cv2.boxFilter` 不接受 `BORDER_WRAP`（4.10.0 实测抛 cv2.error）。要对拍环绕边界，只能用 numpy 先把环绕 padding 补出来，再让 cv2 做常数边界均值后裁回去。",
+    "`cv2.erode` 默认边界是 `+inf`、`cv2.dilate` 是 `-inf`，不是 0。腐蚀 pad True、膨胀 pad False；搞反了错误只出现在图像四周一圈，很难发现。",
+    "`cv2.medianBlur` 的边界固定 REPLICATE，且只接受 uint8（ksize ≤ 5 时也收 float32）。",
+    "`np.round` 是银行家舍入（round(0.5)=0），`cvRound` 是四舍五入。整数值上会差 ±1 灰阶，直方图均衡取整统一用 `floor(x + 0.5)`。",
+    "直方图均衡必须减 `CDF_min`（最低出现灰阶的累积计数），否则暗部被整体抬亮。实测不减的版本在 microscope 用例上和 cv2 差到 9 灰阶，减了之后逐像素一致。",
+    "`skimage.sobel(img / 255)` == `cv2 幅值 / 255 / (4√2)`，精确到 1.8e-16 —— skimage 把平滑核除了 4、求导核除了 √2。",
+    "Otsu 阈值在全部 12 个用例上和 `cv2.threshold(THRESH_OTSU)` **完全相等**（不是差 1 灰阶）。测试仍保留 ±1 容差，因为类间方差出现并列最大值时两家的平局约定不同，换一批图就可能分叉；另外单独写了一条「递推实现 vs 暴力遍历定义式」的测试兜底。",
+    "`cv2.GaussianBlur` 不接受 `ddepth` 参数，输出深度跟随输入，要拿无损结果必须喂 float64（喂 uint8 会先被截断成整数）。"
+  ],
+  "notes": [
+    {
+      "op": "clahe",
+      "text": "**现象**：最大灰阶差 35.0，平均灰阶差 7.17，所有用例都对不上，但 myimg 自己两次跑结果完全一样。\n\n**原因**：CLAHE 的规范实现里有三处自由度，OpenCV 的选择没有写在文档里，只能从代码反推：\n1. 削峰阈值 `clip_limit * tile_pix / 256` 之后，超出部分怎么摊回去 —— OpenCV 是「一次性把超出总量平均分到 256 个桶，再重复几轮」，每轮的整数取整位置不同，结果就不同；\n2. tile 划分不整除时的余数摊给谁；\n3. 双线性插值的取样点算在 tile 中心还是 tile 角点。\n\n**处理**：不追求逐像素一致，测试只查自洽性（dtype / 形状 / 确定性 / 暗块局部对比度确实被拉开）。这条差异如实记在这里，不粉饰。"
+    },
+    {
+      "op": "canny",
+      "text": "**现象**：IoU 逐用例为 flat 1.000，ramp 1.000，step_edge 1.000，impulse 0.823，gauss_noise 0.642，uneven_light 1.000，microscope 0.635，random_uint8 0.688。干净阶跃边缘能到 1.000，带噪声的用例只有 0.6 左右。\n\n**原因**：非极大值抑制的实现不同。OpenCV 沿梯度方向对相邻两个像素的幅值做线性插值再比大小（亚像素 NMS），myimg 把方向量化到 0/45/90/135 四个扇区后直接比邻居。量化会让 22.5° 附近的边缘选错比较对象，结果是边缘位置整体偏移半个到一个像素 —— IoU 对偏移极其敏感，两个像素宽、错开一列的两条边，IoU 就是 0。\n\n**另一个坑（已修）**：NMS 的平局处理。阶跃边缘上相邻两列幅值完全相等，两侧都用 `>=` 会留下两像素宽的边，都用 `>` 会整条边被压掉，必须一松一严：`keep = (mag >= n1) & (mag > n2)`。松紧放在哪一侧决定边缘落在阶跃的左列还是右列，放反了 step_edge 的 IoU 直接是 0。"
+    },
+    {
+      "op": "canny_smoothed",
+      "text": "**现象**：边缘像素数 myimg {'flat': 0, 'ramp': 0, 'step_edge': 192, 'impulse': 0, 'gauss_noise': 0, 'uneven_light': 0, 'microscope': 114, 'random_uint8': 1111} vs cv2 流水线 {'flat': 0, 'ramp': 0, 'step_edge': 192, 'impulse': 0, 'gauss_noise': 0, 'uneven_light': 0, 'microscope': 220, 'random_uint8': 7592}，IoU 在带噪声的用例上只有 0.1 ~ 0.3。\n\n**为什么不对拍**：`cv2.Canny` 没有 sigma 参数，工业用法是`GaussianBlur(uint8) -> Canny(uint8)`。这条链路上有两处口径和 myimg 不同：一是平滑结果被取整回 uint8（梯度被量化），二是 OpenCV 的 NMS 沿梯度方向做亚像素插值、myimg 用 4 扇区量化。平滑后的噪声场梯度很弱，这两处差异会被阈值放大成「检不检得出边缘」的差别，IoU 失去判定意义。\n\n**这个算子真正的验收标准**（在 tests/test_edges.py 里）：microscope 用例（128×128）上 sigma=0 检出 5327 个噪声边缘像素 / 318 个碎片，sigma=1.4 只剩 186 个 / 31 个连通块；纯噪声图（gauss_noise）上 sigma=1.4 一个都检不出。预平滑的价值用这组数字说，不用 IoU 说。"
+    }
+  ]
+}
