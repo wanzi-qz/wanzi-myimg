@@ -82,7 +82,10 @@ python -m gui
 Tkinter + matplotlib，零额外依赖（tkinter 是标准库，matplotlib 已在 dev 依赖里）。
 界面分四块：顶部工具条（用例 / 尺寸 / 打开本地图片 / 导出）、左侧算子树 +
 动态参数滑块 + 实现变体（vector / naive / 积分图）、右侧 2×2 画布、底部状态区
-（误差 / 耗时 / 口径说明 / 坑提示）。
+（误差 / 耗时 / 口径说明 / 坑提示）。配色对齐个人站 wanzi.me 的设计变量：
+黑底 `#070707` + 强调金 `#d8b46a`，matplotlib 信息格走同一套暗色 rcParams，
+导出 PNG 与屏幕同色。左栏「参数扫描」卡任选一个参数点与帧数，开始后画布
+逐帧刷新放动画，结束在状态区给出这一轮的取值区间与空帧说明。
 
 ![canny 边缘叠加](gui_preview_canny.png)
 
@@ -98,7 +101,9 @@ Tkinter + matplotlib，零额外依赖（tkinter 是标准库，matplotlib 已�
    均衡化 CDF、连通域面积柱状 + 质心误差。参数改完 150ms 防抖自动重跑。
 
 回归测试在 `tests/test_gui_engine.py`：参数表 key 与 myimg 签名逐条对齐、
-全算子 × 默认参数 engine 不抛异常、全信息格视图 render 不崩（Agg 后端，不弹窗）。
+全算子 × 默认参数 engine 不抛异常、全信息格视图 render 不崩（Agg 后端，不弹窗）；
+扫描取值序列（choice 原序 / 舍入去重 / odd 保奇 / steps 兜底）与暗色主题色token
+也各有回归项，全仓 747 条测试全绿。
 
 ## 对标口径（2026-10-18 本机实测，numpy 1.26.4 / opencv-python 4.10.0 / scikit-image 0.25.2）
 

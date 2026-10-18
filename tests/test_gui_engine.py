@@ -114,3 +114,51 @@ def test_render_save_png(tmp_path):
     out = render.save_png(fig, str(tmp_path / "x.png"), dpi=80)
     assert (tmp_path / "x.png").stat().st_size > 0
     assert out.endswith("x.png")
+# ---------------------------------------------------------------- 参数扫描
+def test_sweep_choice_keeps_option_order():
+    p = P.PARAMS["median_filter"][1]  # 边界 mode
+    assert p.kind == "choice"
+    assert P.sweep_sequence(p) == list(p.options)
+
+
+def test_sweep_float_rounds_and_dedups():
+    p = P.Param("x", "x", "float", 0.0, lo=0.0, hi=0.1, step=0.01, digits=1)
+    seq = P.sweep_sequence(p, steps=24)
+    assert seq[0] == 0.0 and seq[-1] == 0.1
+    assert len(seq) == len(set(seq))           # 舍入后不留重复帧
+    assert all(round(v, 2) == v for v in seq)  # 只保留 digits+1 位小数
+
+
+def test_sweep_odd_stays_odd():
+    p = P.Param("k", "k", "odd", 3, lo=3, hi=15, step=2)
+    seq = P.sweep_sequence(p, steps=24)
+    assert all(k % 2 == 1 for k in seq)
+    assert seq == sorted(set(seq))
+    assert seq[0] == 3 and seq[-1] == 15
+
+
+def test_sweep_int_rounds_and_steps_floor():
+    p = P.Param("n", "n", "int", 0, lo=0, hi=10, step=1)
+    assert P.sweep_sequence(p, steps=4) == [0, 3, 7, 10]
+    assert P.sweep_sequence(p, steps=1) == [0, 10]  # steps<2 兜底成两端点
+
+
+# ---------------------------------------------------------------- 主题色
+def test_render_dark_theme_rcparams():
+    import matplotlib.pyplot as plt
+    assert plt.rcParams["figure.facecolor"] == "#070707"
+    assert plt.rcParams["savefig.facecolor"] == "#070707"
+    assert plt.rcParams["axes.facecolor"] == "#0b0b0c"
+    assert plt.rcParams["axes.edgecolor"] == "#3b3b3c"
+
+
+def test_app_theme_tokens_and_blend():
+    from gui import app as A
+    for k in ("bg", "bg_soft", "panel", "line", "ink", "muted", "faint", "gold"):
+        c = A.THEME[k]
+        assert c.startswith("#") and len(c) == 7
+    assert A.THEME["bg"] == "#070707"
+    assert A.THEME["gold"] == "#d8b46a"
+    assert A._blend("#ffffff", "#000000", 0.5) == "#808080"
+    assert A._blend("#d8b46a", "#070707", 0.0) == "#070707"
+    assert A._blend("#d8b46a", "#070707", 1.0) == "#d8b46a"

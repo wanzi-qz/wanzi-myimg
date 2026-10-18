@@ -1,15 +1,22 @@
 """GUI 主窗口：Tkinter + matplotlib 嵌入。
 
 双击就能跑，不需要起服务器、不需要额外依赖（tkinter 是标准库，matplotlib 已在 dev 依赖里）。
-界面分四块：
-    顶部工具条   用例 / 尺寸 / 打开文件 / 运行 / 自动刷新 / 导出
-    左侧面板     算子树 + 动态参数 + 实现变体 + 信息格视图
+界面分五块：
+    顶部工具条   品牌 / 用例 / 尺寸 / 打开图片 / 运行 / 自动刷新 / 导出 / 坐标
+    发丝线       金色渐隐分割线，纯装饰（对应站点那条 gradient rule）
+    左侧面板     算子树 + 动态参数 + 实现变体 + 信息格视图 + 参数扫描
     右侧画布     2×2 四格（渲染逻辑全在 render.py）
     底部状态区   误差 / 耗时 / 口径说明 / 坑提示
+
+视觉规范取自 www.wanzi.me 的 CSS 变量：#070707 页面底、#0d0d0e 卡片、#262626 描边、
+#d8b46a 强调金、等宽字体走数字。色值全部集中在 THEME，改一处即可整体换肤。
 
 事件流：任何控件变化 -> _schedule() 防抖 150ms -> _recompute() ->
 engine.run() -> render.draw() -> 状态区刷新。自动刷新关掉时只更新参数显示，
 等你点「运行」。
+
+参数扫描是另一条路：_sweep_tick 每帧改一个参数值后直接 _recompute()（不经过防抖），
+画布逐帧刷新，扫完把该指标的 min~max 写进状态区。取值序列由 params.sweep_sequence 给。
 """
 
 from __future__ import annotations
@@ -17,6 +24,7 @@ from __future__ import annotations
 import pathlib
 import sys
 import tkinter as tk
+import tkinter.font as tkfont
 from tkinter import filedialog, ttk
 
 import numpy as np
@@ -29,10 +37,224 @@ from gui import engine, params as P, render   # noqa: E402
 
 SIZES = (64, 96, 128, 192, 256, 384, 512)
 DEBOUNCE_MS = 150
+FRAME_MS = 150          # 参数扫描的帧间隔：比防抖稍慢一点，肉眼跟得上
+SWEEP_STEPS = (12, 24, 36, 48)
 
 _OK = ("逐像素精确", "一致", "浮点噪声级一致", "IoU 合格")
 _WARN = ("仅记录", "两边都无边缘")
 _BAD = ("超出容差", "不一致", "IoU 偏低")
+
+# --- 主题：wanzi.me 的 :root 设计变量 ----------------------------------------
+THEME = {
+    "bg": "#070707",          # --bg：页面底
+    "bg_soft": "#0a0a0b",     # --bg-soft：树、状态区、输入框底
+    "panel": "#0d0d0e",       # --panel：卡片 / 控件底
+    "hover": "#161617",
+    "line": "#262626",        # --line：常规描边
+    "line_soft": "#1b1b1c",   # --line-soft：卡片描边
+    "hover_line": "#3b3b3c",
+    "ink": "#f3f3f1",         # --ink：主文字
+    "ink_soft": "#ededeb",
+    "muted": "#9b9ea2",       # --muted：次要文字
+    "faint": "#6b6d70",       # --faint：最弱
+    "gold": "#d8b46a",        # 强调金（active tab 下划线、渐变标题都用它）
+    "gold_dim": "#b98f3e",
+    "gold_pale": "#f6e7c4",
+    "gold_soft": "#1a1610",   # 金色按钮 / 选中项的底
+    "gold_line": "#5d4d2b",
+    "ok": "#86c991",
+    "warn": "#d8b46a",
+    "bad": "#e0707a",
+    "info": "#c9cbcc",
+    "note": "#6b6d70",
+}
+
+MONO_CANDIDATES = ["Cascadia Mono", "Cascadia Code", "JetBrains Mono", "Consolas",
+                   "DejaVu Sans Mono"]
+CN_CANDIDATES = ["HarmonyOS Sans SC", "Microsoft YaHei UI", "Microsoft YaHei",
+                 "PingFang SC", "Noto Sans CJK SC", "SimHei"]
+
+
+def _hex_rgb(c: str) -> tuple[int, int, int]:
+    c = c.lstrip("#")
+    return int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
+
+
+def _blend(fg: str, bg: str, a: float) -> str:
+    """把 fg 按透明度 a 混到 bg 上，返回十六进制色。"""
+    f, b = _hex_rgb(fg), _hex_rgb(bg)
+    return "#%02x%02x%02x" % tuple(int(round(b[i] + (f[i] - b[i]) * a)) for i in range(3))
+
+
+def _pick_family(root, candidates, fallback: str) -> str:
+    try:
+        fams = set(tkfont.families(root))
+    except Exception:
+        return candidates[0]
+    for c in candidates:
+        if c in fams:
+            return c
+    return fallback
+
+
+def _apply_theme(root: tk.Tk) -> dict:
+    """把站点的设计变量翻译成 ttk 样式，返回一套字体元组给 tk 控件用。"""
+    default_cn = tkfont.nametofont("TkDefaultFont").actual("family")
+    mono = _pick_family(root, MONO_CANDIDATES, "Consolas")
+    cn = _pick_family(root, CN_CANDIDATES, default_cn or "TkDefaultFont")
+    fonts = {
+        "mono": mono, "cn": cn,
+        "mono9": (mono, 9), "mono10": (mono, 10),
+        "cn9": (cn, 9), "cn10": (cn, 10),
+        "brand": (mono, 12, "bold"),
+        "tagline": (mono, 9),
+        "head": (cn, 9),
+        "label": (mono, 9),
+    }
+
+    root.configure(bg=THEME["bg"])
+    # 原生 tk 控件（Text / Canvas / 文件对话框 / matplotlib 工具条）走 X 资源
+    root.option_add("*Background", THEME["bg"])
+    root.option_add("*Foreground", THEME["ink"])
+    root.option_add("*selectBackground", THEME["gold_soft"])
+    root.option_add("*selectForeground", THEME["gold"])
+    root.option_add("*insertBackground", THEME["gold"])
+    root.option_add("*activeBackground", THEME["hover"])
+    root.option_add("*activeForeground", THEME["ink_soft"])
+    root.option_add("*disabledForeground", THEME["faint"])
+    root.option_add("*highlightThickness", 1)
+    root.option_add("*highlightBackground", THEME["line"])
+    root.option_add("*highlightColor", THEME["gold_line"])
+    # 下拉框弹出层是 Tk 的 Listbox，ttk 样式管不到，只能这样递进去
+    root.option_add("*TCombobox*Listbox*Background", THEME["panel"])
+    root.option_add("*TCombobox*Listbox*Foreground", THEME["ink"])
+    root.option_add("*TCombobox*Listbox*selectBackground", THEME["gold_soft"])
+    root.option_add("*TCombobox*Listbox*selectForeground", THEME["gold"])
+    root.option_add("*TCombobox*Listbox*BorderWidth", 1)
+    root.option_add("*TCombobox*Listbox*Relief", "solid")
+
+    st = ttk.Style(root)
+    if "clam" in st.theme_names():
+        st.theme_use("clam")          # vista/aqua 不吃自定义配色，clam 才听话
+
+    st.configure(".", background=THEME["bg"], foreground=THEME["ink"],
+                 bordercolor=THEME["line"], lightcolor=THEME["panel"],
+                 darkcolor=THEME["panel"], font=fonts["cn9"])
+    st.configure("TFrame", background=THEME["bg"])
+    st.configure("Card.TFrame", background=THEME["panel"])
+    st.configure("TLabel", background=THEME["bg"], foreground=THEME["ink"])
+    st.configure("Card.TLabel", background=THEME["panel"], foreground=THEME["ink"])
+    st.configure("Muted.TLabel", background=THEME["bg"], foreground=THEME["muted"])
+    st.configure("Faint.TLabel", background=THEME["bg"], foreground=THEME["faint"],
+                 font=fonts["mono9"])
+    st.configure("Card.Muted.TLabel", background=THEME["panel"], foreground=THEME["muted"])
+    st.configure("Card.Faint.TLabel", background=THEME["panel"], foreground=THEME["faint"],
+                 font=fonts["mono9"])
+    st.configure("Brand.TLabel", background=THEME["bg"], foreground=THEME["gold"],
+                 font=fonts["brand"])
+    st.configure("Tag.TLabel", background=THEME["bg"], foreground=THEME["faint"],
+                 font=fonts["tagline"])
+    st.configure("Head.TLabel", background=THEME["bg"], foreground=THEME["muted"],
+                 font=fonts["head"])
+
+    st.configure("TButton", background=THEME["panel"], foreground=THEME["ink_soft"],
+                 bordercolor=THEME["line"], focuscolor=THEME["gold_line"],
+                 padding=(10, 4))
+    st.map("TButton",
+           background=[("active", THEME["hover"]), ("pressed", THEME["panel"]),
+                       ("disabled", THEME["bg_soft"])],
+           bordercolor=[("active", THEME["hover_line"])],
+           foreground=[("active", THEME["ink"]), ("disabled", THEME["faint"])])
+    st.configure("Gold.TButton", background=THEME["gold_soft"], foreground=THEME["gold"],
+                 bordercolor=THEME["gold_line"], focuscolor=THEME["gold"], padding=(10, 4))
+    st.map("Gold.TButton",
+           background=[("active", THEME["gold"]), ("pressed", THEME["gold_soft"]),
+                       ("disabled", THEME["bg_soft"])],
+           foreground=[("active", "#0b0b0c"), ("disabled", THEME["faint"])],
+           bordercolor=[("active", THEME["gold"])])
+
+    st.configure("TCheckbutton", background=THEME["bg"], foreground=THEME["ink_soft"],
+                 focuscolor=THEME["gold_line"])
+    st.map("TCheckbutton", background=[("active", THEME["bg"])],
+           indicatorcolor=[("selected", THEME["gold"]), ("!selected", THEME["bg_soft"])])
+    st.configure("Card.TRadiobutton", background=THEME["panel"], foreground=THEME["ink_soft"],
+                 focuscolor=THEME["gold_line"])
+    st.map("Card.TRadiobutton", background=[("active", THEME["panel"])],
+           indicatorcolor=[("selected", THEME["gold"]), ("!selected", THEME["bg_soft"])])
+
+    st.configure("TLabelframe", background=THEME["panel"], bordercolor=THEME["line_soft"],
+                 relief="solid", borderwidth=1)
+    st.configure("TLabelframe.Label", background=THEME["panel"], foreground=THEME["gold"],
+                 font=fonts["label"])
+
+    st.configure("TCombobox", fieldbackground=THEME["bg_soft"], background=THEME["panel"],
+                 foreground=THEME["ink"], arrowcolor=THEME["muted"],
+                 bordercolor=THEME["line"], lightcolor=THEME["panel"],
+                 darkcolor=THEME["panel"], selectbackground=THEME["gold_soft"],
+                 selectforeground=THEME["gold"], padding=3)
+    st.map("TCombobox",
+           fieldbackground=[("readonly", THEME["bg_soft"]), ("disabled", THEME["bg"])],
+           foreground=[("readonly", THEME["ink"]), ("disabled", THEME["faint"])],
+           arrowcolor=[("disabled", THEME["faint"])],
+           selectbackground=[("readonly", THEME["bg_soft"])],
+           selectforeground=[("readonly", THEME["ink"])],
+           bordercolor=[("active", THEME["hover_line"]), ("focus", THEME["gold_line"])])
+
+    st.configure("TEntry", fieldbackground=THEME["bg_soft"], foreground=THEME["ink"],
+                 insertcolor=THEME["gold"], bordercolor=THEME["line"],
+                 lightcolor=THEME["line"], darkcolor=THEME["line"], padding=2)
+    st.map("TEntry", bordercolor=[("focus", THEME["gold_line"])],
+           lightcolor=[("focus", THEME["gold_line"])],
+           foreground=[("disabled", THEME["faint"])])
+
+    # rowheight 是物理像素单位，写死 21 在 200% 缩放下会把字拦腰截断，
+    # 按字体实测行高给
+    row_h = tkfont.Font(root=root, font=fonts["mono9"]).metrics("linespace") + 8
+    st.configure("Treeview", background=THEME["bg_soft"], fieldbackground=THEME["bg_soft"],
+                 foreground=THEME["ink_soft"], bordercolor=THEME["line"],
+                 borderwidth=1, relief="solid", rowheight=row_h, font=fonts["mono9"])
+    st.map("Treeview", background=[("selected", THEME["gold_soft"])],
+           foreground=[("selected", THEME["gold"])])
+    st.configure("Treeview.Heading", background=THEME["panel"], foreground=THEME["muted"])
+
+    st.configure("Horizontal.TScale", background=THEME["gold"], troughcolor=THEME["bg_soft"],
+                 bordercolor=THEME["line"], darkcolor=THEME["gold_dim"],
+                 lightcolor=THEME["gold_pale"], sliderthickness=11)
+    st.map("Horizontal.TScale", background=[("active", THEME["gold_pale"])])
+    st.configure("TProgressbar", background=THEME["gold"], troughcolor=THEME["bg_soft"],
+                 bordercolor=THEME["line"], lightcolor=THEME["gold"],
+                 darkcolor=THEME["gold"])
+    st.configure("Vertical.TScrollbar", background=THEME["panel"], troughcolor=THEME["bg"],
+                 bordercolor=THEME["line"], arrowcolor=THEME["muted"],
+                 lightcolor=THEME["line"], darkcolor=THEME["line"])
+    st.map("Vertical.TScrollbar", background=[("active", THEME["hover"])],
+           arrowcolor=[("active", THEME["gold"])])
+    return fonts
+
+
+def _style_toolbar(tb) -> None:
+    """matplotlib 的 NavigationToolbar2Tk 用的是原生 tk.Button，ttk 样式管不到。
+
+    3.9 的 _set_image_for_button 会读按钮的 foreground 生成一版浅色图标，
+    再按 background 亮暗挑用哪一版 —— 所以只要把底色改成暗的、前景改成亮的，
+    然后调一次 _rescale() 让它重算图标，工具条就跟上了暗色主题。
+    """
+    tb.configure(bg=THEME["bg"], highlightbackground=THEME["bg"], bd=0)
+    for w in tb.winfo_children():
+        if isinstance(w, (tk.Button, tk.Checkbutton)):
+            w.configure(bg=THEME["bg"], fg=THEME["muted"], activebackground=THEME["hover"],
+                        activeforeground=THEME["gold"], highlightbackground=THEME["bg"],
+                        highlightthickness=0, bd=0)
+            if isinstance(w, tk.Checkbutton):     # selectcolor 只有 Checkbutton 认
+                w.configure(selectcolor=THEME["panel"])
+        elif isinstance(w, tk.Label):
+            w.configure(bg=THEME["bg"], fg=THEME["muted"])
+        elif isinstance(w, tk.Frame):
+            w.configure(bg=THEME["bg"])
+    try:
+        tb._rescale()
+    except Exception:
+        pass
 
 
 def _dpi_aware() -> None:
@@ -44,14 +266,34 @@ def _dpi_aware() -> None:
         pass
 
 
+def _initial_geometry(root: tk.Tk) -> None:
+    """按 DPI 缩放给初始窗口尺寸。
+
+    SetProcessDpiAwareness 之后 tkinter 的 geometry 单位是物理像素，
+    但字体大小走的是点（会被系统缩放放大），150% 缩放下 1420x900 物理像素
+    只相当于 946x600 的逻辑窗口，控件全挤在一起。这里按 tk scaling 换算，
+    再拿屏幕尺寸兜底。
+    """
+    try:
+        scale = root.winfo_fpixels("1i") / 96.0
+    except Exception:
+        scale = 1.0
+    scale = max(1.0, min(scale, 3.0))
+    sw, sh = root.winfo_screenwidth(), root.winfo_screenheight()
+    w = int(min(1420 * scale, sw * 0.96))
+    h = int(min(900 * scale, sh * 0.92))
+    root.geometry(f"{w}x{h}")
+    root.minsize(int(1120 * scale), int(720 * scale))
+
+
 class App:
     def __init__(self, root: tk.Tk):
         self.root = root
         root.title("myimg 图像算子对拍台 —— 手写 NumPy vs OpenCV")
-        root.geometry("1420x900")
-        root.minsize(1120, 720)
+        _initial_geometry(root)
 
         render.setup_style()
+        self.fonts = _apply_theme(root)
 
         # --- 状态 -----------------------------------------------------------
         self.cur_op = "gaussian_filter"
@@ -64,7 +306,16 @@ class App:
         self.file_img: np.ndarray | None = None
         self.file_name = ""
         self.param_vars: dict[str, tk.Variable] = {}
+        self.param_entries: dict[str, ttk.Entry] = {}
         self._debounce: str | None = None
+        self._hairline_job: str | None = None
+        # 参数扫描
+        self._sweep_active = False
+        self._sweep_after: str | None = None
+        self._sweep_param_def = None
+        self._sweep_seq: list = []
+        self._sweep_i = 0
+        self._sweep_rows: list = []
 
         self.auto_var = tk.BooleanVar(value=True)
         self.variant_var = tk.StringVar(value="vector")
@@ -72,8 +323,12 @@ class App:
         self.size_var = tk.StringVar(value="128")
         self.view_var = tk.StringVar()
         self.coord_var = tk.StringVar(value="")
+        self.sweep_var = tk.StringVar()
+        self.sweep_steps_var = tk.StringVar(value="24")
+        self.sweep_info_var = tk.StringVar(value="")
 
         self._build_toolbar()
+        self._build_hairline()
         self._build_left()
         self._build_canvas()
         self._build_status()
@@ -83,41 +338,86 @@ class App:
 
     # ---------------------------------------------------------------- 布局
     def _build_toolbar(self):
-        bar = ttk.Frame(self.root, padding=(8, 6, 8, 2))
+        bar = ttk.Frame(self.root, padding=(10, 8, 10, 4))
         bar.grid(row=0, column=0, columnspan=2, sticky="ew")
 
-        ttk.Label(bar, text="用例").grid(row=0, column=0, padx=(0, 4))
+        # 右侧坐标先 pack，后面控件才不会把它挤下去
+        ttk.Label(bar, textvariable=self.coord_var, style="Faint.TLabel").pack(side="right")
+
+        ttk.Label(bar, text="myimg", style="Brand.TLabel").pack(side="left")
+        ttk.Label(bar, text="hand-written numpy ops vs opencv",
+                  style="Tag.TLabel").pack(side="left", padx=(10, 22))
+
+        ttk.Label(bar, text="用例", style="Head.TLabel").pack(side="left", padx=(0, 4))
         self.case_cb = ttk.Combobox(bar, textvariable=self.case_var,
-                                    state="readonly", width=34)
-        self.case_cb.grid(row=0, column=1, padx=(0, 10))
+                                    state="readonly", width=34, font=self.fonts["mono9"])
+        self.case_cb.pack(side="left", padx=(0, 12))
         self.case_cb.bind("<<ComboboxSelected>>", lambda e: self._on_case_change())
 
-        ttk.Label(bar, text="尺寸").grid(row=0, column=2, padx=(0, 4))
-        self.size_cb = ttk.Combobox(bar, textvariable=self.size_var,
-                                    state="readonly", width=6, values=SIZES)
-        self.size_cb.grid(row=0, column=3, padx=(0, 10))
+        ttk.Label(bar, text="尺寸", style="Head.TLabel").pack(side="left", padx=(0, 4))
+        self.size_cb = ttk.Combobox(bar, textvariable=self.size_var, state="readonly",
+                                    width=6, values=SIZES, font=self.fonts["mono9"])
+        self.size_cb.pack(side="left", padx=(0, 12))
         self.size_cb.bind("<<ComboboxSelected>>", lambda e: self._on_size_change())
 
-        ttk.Button(bar, text="打开图片…", width=10,
-                   command=self._open_file).grid(row=0, column=4, padx=(0, 6))
-        self.run_btn = ttk.Button(bar, text="运行对比", width=10,
+        ttk.Button(bar, text="打开图片", width=10,
+                   command=self._open_file).pack(side="left", padx=(0, 6))
+        self.run_btn = ttk.Button(bar, text="运行对比", width=10, style="Gold.TButton",
                                   command=self._recompute)
-        self.run_btn.grid(row=0, column=5, padx=(0, 6))
+        self.run_btn.pack(side="left", padx=(0, 6))
         ttk.Checkbutton(bar, text="自动刷新", variable=self.auto_var,
-                        command=self._schedule).grid(row=0, column=6, padx=(0, 6))
-        ttk.Button(bar, text="导出 PNG…", width=10,
-                   command=self._export).grid(row=0, column=7)
+                        command=self._schedule).pack(side="left", padx=(0, 6))
+        ttk.Button(bar, text="导出 PNG", width=10,
+                   command=self._export).pack(side="left")
 
-        ttk.Label(bar, textvariable=self.coord_var, foreground="#666666",
-                  font=("Consolas", 9)).grid(row=0, column=8, padx=(14, 0))
+    def _build_hairline(self):
+        """金色渐隐发丝线：站点的 .rule 就是这个效果，纯装饰但对观感很关键。"""
+        c = tk.Canvas(self.root, width=1, height=2, bd=0, highlightthickness=0,
+                      bg=THEME["bg"])
+        c.grid(row=1, column=0, columnspan=2, sticky="ew")
+        self.hairline = c
+        c.bind("<Configure>", lambda e: self._on_hairline_configure())
+        self._draw_hairline()
+
+    def _on_hairline_configure(self):
+        if self._hairline_job is not None:
+            self.root.after_cancel(self._hairline_job)
+        self._hairline_job = self.root.after_idle(self._draw_hairline)
+
+    def _draw_hairline(self):
+        self._hairline_job = None
+        c = self.hairline
+        try:
+            w = c.winfo_width()
+        except tk.TclError:
+            return
+        if w <= 1:
+            return
+        c.delete("all")
+        step = 4
+        for x0 in range(0, w, step):
+            t = x0 / max(1, w - 1)
+            a = (1.0 - t) ** 1.6 * 0.85          # 左端最亮，往右指数衰减到背景
+            c.create_rectangle(x0, 0, min(x0 + step, w), 2,
+                               fill=_blend(THEME["gold"], THEME["bg"], a), outline="")
 
     def _build_left(self):
-        left = ttk.Frame(self.root, padding=(8, 2, 4, 6))
-        left.grid(row=1, column=0, sticky="nsew")
-        self.root.columnconfigure(0, weight=0, minsize=330)
+        left = ttk.Frame(self.root, padding=(10, 6, 4, 8))
+        left.grid(row=2, column=0, sticky="nsew")
+        self.root.columnconfigure(0, weight=0, minsize=340)
 
-        self.tree = ttk.Treeview(left, show="tree", height=10, selectmode="browse")
-        self.tree.grid(row=0, column=0, sticky="ew")
+        ttk.Label(left, text="算子", style="Head.TLabel").grid(row=0, column=0,
+                                                              sticky="w", pady=(0, 3))
+        # 树单独占一个 Frame + 滚动条：19 行算子放不下时靠滚轮，
+        # 而不是被 grid 把行高压扁（压扁会把文字拦腰截断）
+        tf = ttk.Frame(left)
+        tf.grid(row=1, column=0, sticky="nsew")
+        self.tree = ttk.Treeview(tf, show="tree", height=9, selectmode="browse")
+        self.tree.pack(side="left", fill="both", expand=True)
+        sb = ttk.Scrollbar(tf, orient="vertical", command=self.tree.yview)
+        sb.pack(side="right", fill="y")
+        self.tree.configure(yscrollcommand=sb.set)
+        left.rowconfigure(1, weight=1)
         self._op_nodes: dict[str, str] = {}
         for gid, (gname, ops) in enumerate(P.OP_GROUPS):
             gnode = self.tree.insert("", "end", text=gname, open=True)
@@ -127,41 +427,69 @@ class App:
         self.tree.bind("<<TreeviewSelect>>", self._on_tree_select)
 
         pf = ttk.LabelFrame(left, text="参数", padding=6)
-        pf.grid(row=1, column=0, sticky="ew", pady=(8, 0))
+        pf.grid(row=2, column=0, sticky="ew", pady=(10, 0))
         self.param_frame = pf
 
         vf = ttk.LabelFrame(left, text="实现变体", padding=6)
-        vf.grid(row=2, column=0, sticky="ew", pady=(8, 0))
+        vf.grid(row=3, column=0, sticky="ew", pady=(10, 0))
         self.variant_frame = vf
 
-        ttk.Label(left, text="右下信息格").grid(row=3, column=0, sticky="w", pady=(8, 2))
+        sf = ttk.LabelFrame(left, text="参数扫描", padding=6)
+        sf.grid(row=4, column=0, sticky="ew", pady=(10, 0))
+        self._build_sweep(sf)
+
+        ttk.Label(left, text="右下信息格", style="Head.TLabel").grid(
+            row=5, column=0, sticky="w", pady=(12, 3))
         self.view_cb = ttk.Combobox(left, textvariable=self.view_var,
-                                    state="readonly")
-        self.view_cb.grid(row=4, column=0, sticky="ew")
+                                    state="readonly", font=self.fonts["cn9"])
+        self.view_cb.grid(row=6, column=0, sticky="ew")
         self.view_cb.bind("<<ComboboxSelected>>", lambda e: self._on_view_change())
 
         left.columnconfigure(0, weight=1)
+
+    def _build_sweep(self, sf):
+        """参数扫描卡片：选一个参数，逐帧把画布从 lo 扫到 hi。"""
+        ttk.Label(sf, text="参数", style="Card.TLabel").grid(row=0, column=0, sticky="w")
+        self.sweep_cb = ttk.Combobox(sf, textvariable=self.sweep_var, state="readonly",
+                                     width=13, font=self.fonts["cn9"])
+        self.sweep_cb.grid(row=0, column=1, sticky="w", padx=(4, 10))
+
+        ttk.Label(sf, text="帧数", style="Card.TLabel").grid(row=0, column=2, sticky="w")
+        self.sweep_steps_cb = ttk.Combobox(sf, textvariable=self.sweep_steps_var,
+                                           state="readonly", width=4,
+                                           values=SWEEP_STEPS, font=self.fonts["mono9"])
+        self.sweep_steps_cb.grid(row=0, column=3, sticky="w", padx=(4, 0))
+
+        self.sweep_btn = ttk.Button(sf, text="开始扫描", style="Gold.TButton", width=10,
+                                    command=self._toggle_sweep)
+        self.sweep_btn.grid(row=1, column=0, columnspan=2, sticky="w", pady=(7, 0))
+        ttk.Label(sf, textvariable=self.sweep_info_var, style="Card.Faint.TLabel",
+                  width=36, anchor="w", justify="left").grid(
+            row=2, column=0, columnspan=4, sticky="w", pady=(6, 0))
+        sf.columnconfigure(3, weight=1)
 
     def _build_canvas(self):
         from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
                                                        NavigationToolbar2Tk)
 
-        wrap = ttk.Frame(self.root, padding=(4, 2, 8, 6))
-        wrap.grid(row=1, column=1, sticky="nsew")
+        wrap = ttk.Frame(self.root, padding=(4, 6, 10, 8))
+        wrap.grid(row=2, column=1, sticky="nsew")
         self.root.columnconfigure(1, weight=1)
-        self.root.rowconfigure(1, weight=1)
+        self.root.rowconfigure(2, weight=1)
         wrap.rowconfigure(0, weight=1)
         wrap.columnconfigure(0, weight=1)
 
         self.fig = render.make_figure(dpi=100)
         self.canvas = FigureCanvasTkAgg(self.fig, master=wrap)
+        self.canvas.get_tk_widget().configure(background=THEME["bg"])
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         # NavigationToolbar2Tk 内部用 pack，不能直接塞进 grid 管理的容器，
         # 给它一个专属 Frame 隔离两种几何管理器
         toolframe = ttk.Frame(wrap)
-        toolframe.grid(row=1, column=0, sticky="ew")
+        toolframe.grid(row=1, column=0, sticky="ew", pady=(4, 0))
         self.toolbar = NavigationToolbar2Tk(self.canvas, toolframe)
         self.toolbar.update()
+        _style_toolbar(self.toolbar)
         self.canvas.mpl_connect("motion_notify_event", self._on_motion)
         # 高分屏首帧的坑：canvas 在 <Map> 里把 device pixel ratio 从 1 提到 2
         # （figure.dpi 100 -> 200），随后靠 configure(widget) 触发 <Configure>
@@ -172,27 +500,50 @@ class App:
         self.canvas.get_tk_widget().bind("<Map>", self._sync_canvas_size, "+")
 
     def _sync_canvas_size(self, event=None):
-        """映射完成后把 figure 英寸数 / photo 尺寸对齐到 widget 实际尺寸。"""
+        """映射后把画布 widget 的"请求尺寸"收回去，让 grid 说了算。
+
+        高分屏的坑分两层：
+        1) <Map> 时 backend 把 figure.dpi 从 100 提到 200，并且顺手把 tk canvas
+           的 width/height 请求改成新的物理尺寸（1880x1480）。grid 的格子不会
+           比子控件的请求小，于是整个右栏被撑到窗口外 -> 四格被裁。
+        2) 请求尺寸不收回去，窗口缩小时格子也缩不下去（grid 不缩到请求以下）。
+        把请求改成 1x1 后，格子尺寸完全由窗口决定，backend 自己绑的
+        <Configure> -> resize() 会把 figure 英寸数对齐到分配尺寸（forward=False，
+        不会再改回请求），放大缩小都跟手。
+        """
         import types
 
         def _do():
-            w = self.canvas.get_tk_widget().winfo_width()
-            h = self.canvas.get_tk_widget().winfo_height()
-            if w < 80 or h < 80:
-                return
-            self.canvas.resize(types.SimpleNamespace(width=w, height=h))
+            try:
+                w = self.canvas.get_tk_widget()
+                w.configure(width=1, height=1)
+                self.root.update_idletasks()
+                aw, ah = w.winfo_width(), w.winfo_height()
+                if aw < 80 or ah < 80:
+                    return
+                # 分配尺寸没变就不会有 <Configure>，backend 的 resize 不再跑，
+                # 这里手动补一次，把 figure 英寸数按新 dpi 对齐到分配尺寸
+                self.canvas.resize(types.SimpleNamespace(width=aw, height=ah))
+            except tk.TclError:
+                pass
         self.root.after_idle(_do)
 
     def _build_status(self):
+        f = self.fonts
         self.status = tk.Text(self.root, height=7, wrap="word", relief="flat",
-                              background="#f5f5f5", font=("Consolas", 10),
-                              state="disabled", padx=8, pady=6)
-        self.status.grid(row=2, column=0, columnspan=2, sticky="ew")
-        self.status.tag_configure("ok", foreground="#1a7f37")
-        self.status.tag_configure("warn", foreground="#9a6700")
-        self.status.tag_configure("bad", foreground="#cf222e")
-        self.status.tag_configure("info", foreground="#444444")
-        self.status.tag_configure("note", foreground="#666666")
+                              background=THEME["bg_soft"], foreground=THEME["ink_soft"],
+                              font=f["mono10"], state="disabled", padx=10, pady=7,
+                              highlightthickness=1, highlightbackground=THEME["line"],
+                              highlightcolor=THEME["line"], insertbackground=THEME["gold"],
+                              selectbackground=THEME["gold_soft"],
+                              selectforeground=THEME["gold"])
+        self.status.grid(row=3, column=0, columnspan=2, sticky="ew", padx=(10, 10),
+                         pady=(0, 8))
+        self.status.tag_configure("ok", foreground=THEME["ok"])
+        self.status.tag_configure("warn", foreground=THEME["warn"])
+        self.status.tag_configure("bad", foreground=THEME["bad"])
+        self.status.tag_configure("info", foreground=THEME["info"])
+        self.status.tag_configure("note", foreground=THEME["note"])
 
     # ---------------------------------------------------------------- 事件
     def _on_tree_select(self, event):
@@ -207,6 +558,7 @@ class App:
         self._select_op(text)
 
     def _select_op(self, op: str):
+        self._stop_sweep()
         self.cur_op = op
         self.tree.selection_set(self._op_nodes[op])
         # 形态学算子配灰度图没有意义，自动换到二值用例
@@ -226,18 +578,20 @@ class App:
         for w in self.param_frame.winfo_children():
             w.destroy()
         self.param_vars.clear()
+        self.param_entries.clear()
         params = P.PARAMS.get(op, ())
         if not params:
             ttk.Label(self.param_frame, text="（这个算子没有可调参数）",
-                      foreground="#888888").grid(row=0, column=0, sticky="w")
+                      style="Card.Muted.TLabel").grid(row=0, column=0, sticky="w")
+            self._refresh_sweep_options()
             return
         for row, p in enumerate(params):
-            ttk.Label(self.param_frame, text=p.label).grid(row=row, column=0,
-                                                           sticky="w", pady=2)
+            ttk.Label(self.param_frame, text=p.label, style="Card.TLabel").grid(
+                row=row, column=0, sticky="w", pady=2)
             if p.kind == "choice":
                 var = tk.StringVar(value=str(p.default))
-                cb = ttk.Combobox(self.param_frame, textvariable=var,
-                                  state="readonly", width=12, values=list(p.options))
+                cb = ttk.Combobox(self.param_frame, textvariable=var, state="readonly",
+                                  width=12, values=list(p.options), font=self.fonts["mono9"])
                 cb.grid(row=row, column=1, sticky="w", pady=2)
                 var.trace_add("write", lambda *a: self._schedule())
                 self.param_vars[p.key] = var
@@ -246,15 +600,16 @@ class App:
                 sc = ttk.Scale(self.param_frame, from_=p.lo, to=p.hi,
                                variable=var, orient="horizontal")
                 sc.grid(row=row, column=1, sticky="we", pady=2)
-                ent = ttk.Entry(self.param_frame, width=7,
-                                font=("Consolas", 9))
+                ent = ttk.Entry(self.param_frame, width=7, font=self.fonts["mono9"])
                 ent.grid(row=row, column=2, padx=(6, 0), pady=2)
                 ent.insert(0, self._fmt_param(p, p.default))
                 sc.configure(command=lambda v, p=p, e=ent: self._on_scale(p, v, e))
                 ent.bind("<Return>", lambda e, p=p, s=sc, en=ent: self._on_entry(p, s, en))
                 ent.bind("<FocusOut>", lambda e, p=p, s=sc, en=ent: self._on_entry(p, s, en))
                 self.param_vars[p.key] = var
+                self.param_entries[p.key] = ent
         self.param_frame.columnconfigure(1, weight=1)
+        self._refresh_sweep_options()
 
     def _build_variants(self, op: str):
         for w in self.variant_frame.winfo_children():
@@ -265,11 +620,30 @@ class App:
         self.variant_var.set(self.cur_variant)
         for i, (key, label) in enumerate(opts):
             ttk.Radiobutton(self.variant_frame, text=label, value=key,
-                            variable=self.variant_var,
+                            variable=self.variant_var, style="Card.TRadiobutton",
                             command=self._on_variant_change).grid(row=i, column=0, sticky="w")
         if len(opts) == 1:
             ttk.Label(self.variant_frame, text="（只有这一种实现）",
-                      foreground="#888888").grid(row=0, column=1, sticky="w", padx=(8, 0))
+                      style="Card.Muted.TLabel").grid(row=0, column=1, sticky="w", padx=(8, 0))
+
+    def _refresh_sweep_options(self):
+        """换算子后重填扫描参数下拉框，默认挑数值型（扫起来才有动画感）。"""
+        if getattr(self, "sweep_cb", None) is None:
+            return
+        params = P.PARAMS.get(self.cur_op, ())
+        labels = [p.label for p in params]
+        self.sweep_cb.configure(values=labels)
+        if not labels:
+            self.sweep_var.set("")
+            self.sweep_btn.configure(state="disabled")
+            self.sweep_info_var.set("（这个算子没有可调参数）")
+            return
+        if self.sweep_var.get() not in labels:
+            pref = next((p.label for p in params if p.kind in ("float", "int", "odd")),
+                        labels[0])
+            self.sweep_var.set(pref)
+        self.sweep_btn.configure(state="normal")
+        self.sweep_info_var.set("选好参数点「开始扫描」，画布逐帧刷新")
 
     def _on_scale(self, p: P.Param, val: str, entry: ttk.Entry):
         try:
@@ -299,6 +673,7 @@ class App:
         return str(int(round(v)))
 
     def _on_variant_change(self):
+        self._stop_sweep()
         self.cur_variant = self.variant_var.get()
         self._schedule()
 
@@ -308,15 +683,18 @@ class App:
             render.draw(self.fig, self.res, self.cur_view)
 
     def _on_case_change(self):
+        self._stop_sweep()
         label = self.case_var.get()
         self.cur_case = label.split(" — ")[0]
         self._schedule()
 
     def _on_size_change(self):
+        self._stop_sweep()
         self.cur_size = int(self.size_var.get())
         self._schedule()
 
     def _open_file(self):
+        self._stop_sweep()
         path = filedialog.askopenfilename(
             title="选一张图片",
             filetypes=[("图片", "*.png *.jpg *.jpeg *.bmp *.tif *.tiff"), ("所有文件", "*.*")])
@@ -359,6 +737,8 @@ class App:
 
     # ---------------------------------------------------------------- 计算
     def _schedule(self):
+        if self._sweep_active:      # 扫描期间自己控帧，别被防抖打断
+            return
         if self._debounce is not None:
             self.root.after_cancel(self._debounce)
         if not self.auto_var.get():
@@ -385,6 +765,149 @@ class App:
         render.draw(self.fig, res, self.cur_view)
         self._update_status(res)
 
+    # ------------------------------------------------------------ 参数扫描
+    def _sweep_param(self):
+        label = self.sweep_var.get()
+        for q in P.PARAMS.get(self.cur_op, ()):
+            if q.label == label:
+                return q
+        return None
+
+    def _toggle_sweep(self):
+        if self._sweep_active:
+            self._stop_sweep()
+            self.sweep_info_var.set("已停止")
+        else:
+            self._start_sweep()
+
+    def _start_sweep(self):
+        if self.res is None:
+            self._recompute()
+        p = self._sweep_param()
+        if p is None:
+            self.sweep_info_var.set("（先选一个要扫的参数）")
+            return
+        try:
+            steps = int(self.sweep_steps_var.get())
+        except ValueError:
+            steps = 24
+        seq = P.sweep_sequence(p, steps)
+        if len(seq) < 2:
+            self.sweep_info_var.set("（这个参数可扫的取值不足两个）")
+            return
+        self._sweep_param_def = p
+        self._sweep_seq = seq
+        self._sweep_i = 0
+        self._sweep_rows = []
+        self._sweep_empty = 0
+        self._sweep_active = True
+        self.sweep_btn.configure(text="停止")
+        self._sweep_tick()
+
+    def _sweep_tick(self):
+        if not self._sweep_active:
+            return
+        if self._sweep_i >= len(self._sweep_seq):
+            self._finish_sweep()
+            return
+        p = self._sweep_param_def
+        v = self._sweep_seq[self._sweep_i]
+        self._set_param_value(p, v)
+        try:
+            self._recompute()
+        except tk.TclError:           # 窗口在扫描中被关掉
+            self._stop_sweep()
+            return
+        name, val = self._headline(self.res)
+        if self.res.kind == "iou" and self.res.metrics.get("both_empty"):
+            self._sweep_empty += 1
+        self._sweep_rows.append((v, val))
+        self._sweep_i += 1
+        shown = render._fmt(val) if val is not None else "-"
+        self.sweep_info_var.set(f"{p.label}={self._fmt_sweep_v(p, v)}　"
+                                f"{self._sweep_i}/{len(self._sweep_seq)}　{name} {shown}")
+        self._sweep_after = self.root.after(FRAME_MS, self._sweep_tick)
+
+    def _finish_sweep(self):
+        p = self._sweep_param_def
+        rows = [(v, m) for v, m in self._sweep_rows if m is not None]
+        self._stop_sweep()
+        if not rows or p is None:
+            self.sweep_info_var.set("扫描完成：没有可用指标")
+            return
+        name, _ = self._headline(self.res)
+        vals = [m for _, m in rows]
+        lo_i, hi_i = int(np.argmin(vals)), int(np.argmax(vals))
+        summary = (f"参数扫描完成：{p.label} {self._fmt_sweep_v(p, rows[0][0])} → "
+                   f"{self._fmt_sweep_v(p, rows[-1][0])}，共 {len(rows)} 帧。"
+                   f"{name} 最小 {render._fmt(vals[lo_i])}"
+                   f"（{p.label}={self._fmt_sweep_v(p, rows[lo_i][0])}）、"
+                   f"最大 {render._fmt(vals[hi_i])}"
+                   f"（{p.label}={self._fmt_sweep_v(p, rows[hi_i][0])}）")
+        if getattr(self, "_sweep_empty", 0):
+            summary += (f"。其中 {self._sweep_empty} 帧两边都无边缘，"
+                        f"IoU=1 只表示「都空」，不代表对齐")
+        self._status_append(summary + "\n", "warn")
+        self.sweep_info_var.set(f"完成 {len(rows)} 帧　{name} "
+                                f"{render._fmt(vals[lo_i])} ~ {render._fmt(vals[hi_i])}")
+
+    def _stop_sweep(self):
+        self._sweep_active = False
+        if self._sweep_after is not None:
+            try:
+                self.root.after_cancel(self._sweep_after)
+            except Exception:
+                pass
+            self._sweep_after = None
+        btn = getattr(self, "sweep_btn", None)
+        if btn is not None:
+            try:
+                btn.configure(text="开始扫描")
+            except tk.TclError:
+                pass
+
+    def _set_param_value(self, p: P.Param, v):
+        """把扫描到的值写回界面控件，滑块和输入框跟着动。"""
+        var = self.param_vars.get(p.key)
+        if var is None:
+            return
+        if p.kind == "choice":
+            var.set(str(v))
+            return
+        var.set(float(v))
+        ent = self.param_entries.get(p.key)
+        if ent is not None:
+            try:
+                ent.delete(0, "end")
+                ent.insert(0, self._fmt_param(p, v))
+            except tk.TclError:
+                pass
+
+    @staticmethod
+    def _fmt_sweep_v(p: P.Param, v) -> str:
+        return str(v) if p.kind == "choice" else App._fmt_param(p, v)
+
+    @staticmethod
+    def _headline(res):
+        """这一帧最该盯的那个数：不同 kind 的算子主指标不一样。"""
+        if res is None:
+            return "指标", None
+        m = res.metrics or {}
+        k = res.kind
+        if k == "iou":
+            return "IoU", m.get("iou")
+        if k == "tuple3":
+            pc = (m.get("per_component") or {}).get("mag") or {}
+            return "mag max|err|", pc.get("max_abs")
+        if k == "labels":
+            try:
+                return "个数差", abs(int(m.get("mine_n", 0)) - int(m.get("ref_n", 0)))
+            except (TypeError, ValueError):
+                return "个数差", None
+        if k == "stats":
+            return "外接框最大差", m.get("max_box_err")
+        return "max|err|", m.get("max_abs")
+
     # ---------------------------------------------------------------- 显示
     def _on_motion(self, event):
         if event.inaxes is None or event.xdata is None or self.res is None:
@@ -401,6 +924,13 @@ class App:
         t.insert("end", "出错了：\n", "bad")
         t.insert("end", msg + "\n", "bad")
         t.insert("end", "（参数组合不合法时算子会直接抛异常，界面不崩，改参数即可）", "note")
+        t.configure(state="disabled")
+
+    def _status_append(self, text: str, tag: str = "info"):
+        t = self.status
+        t.configure(state="normal")
+        t.insert("end", text, tag)
+        t.see("end")
         t.configure(state="disabled")
 
     def _update_status(self, res):
@@ -462,12 +992,7 @@ class App:
 def main():
     _dpi_aware()
     root = tk.Tk()
-    style = ttk.Style(root)
-    if "vista" in style.theme_names():
-        style.theme_use("vista")
-    elif "clam" in style.theme_names():
-        style.theme_use("clam")
-    App(root)
+    App(root)          # 主题在 App.__init__ 里装，单独建窗口也不会漏
     root.mainloop()
 
 

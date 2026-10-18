@@ -18,14 +18,17 @@ from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
 
 # Windows 上是微软雅黑；找不到就退回 DejaVu（中文会变方框，但至少不崩）
-FONT_CANDIDATES = ["Microsoft YaHei", "SimHei", "PingFang SC", "Noto Sans CJK SC",
-                   "WenQuanYi Zen Hei", "DejaVu Sans"]
+FONT_CANDIDATES = ["HarmonyOS Sans SC", "Microsoft YaHei UI", "Microsoft YaHei",
+                   "PingFang SC", "Noto Sans CJK SC", "SimHei", "DejaVu Sans"]
 
-_C_EDGE_MINE = (1.0, 0.25, 0.25)     # 只有 myimg 检出 -> 红
-_C_EDGE_REF = (0.2, 0.75, 1.0)       # 只有 OpenCV 检出 -> 青
-_C_EDGE_BOTH = (1.0, 1.0, 1.0)       # 两边都有 -> 白
-_C_MINE = "#d62728"
-_C_REF = "#1f77b4"
+# 配色跟 www.wanzi.me 同一套语言：近黑底 + 金=myimg + 青=OpenCV。
+# 金/青在暗底上对比够，而且和边缘叠加的语义色（红=仅我的/青=仅 cv2）不打架。
+_C_EDGE_MINE = (0.878, 0.439, 0.478)   # 只有 myimg 检出 -> 红
+_C_EDGE_REF = (0.337, 0.714, 0.761)    # 只有 OpenCV 检出 -> 青
+_C_EDGE_BOTH = (0.949, 0.949, 0.945)   # 两边都有 -> 白
+_C_MINE = "#d8b46a"                    # 站点强调金
+_C_REF = "#56b6c2"                     # 青
+_C_INPUT = "#6b6d70"                   # 第三色：输入分布、差值柱，都用这个灰
 
 
 def setup_style() -> None:
@@ -37,6 +40,18 @@ def setup_style() -> None:
     rcParams["font.size"] = 9
     rcParams["axes.titlesize"] = 9.5
     rcParams["image.interpolation"] = "nearest"
+    # 暗色主题：色值和 tkinter 界面共用一组（wanzi.me 的设计变量）
+    rcParams["figure.facecolor"] = "#070707"
+    rcParams["savefig.facecolor"] = "#070707"
+    rcParams["axes.facecolor"] = "#0b0b0c"
+    rcParams["axes.edgecolor"] = "#3b3b3c"
+    rcParams["axes.labelcolor"] = "#c9cbcc"
+    rcParams["axes.titlecolor"] = "#ededeb"
+    rcParams["text.color"] = "#ededeb"
+    rcParams["xtick.color"] = "#9b9ea2"
+    rcParams["ytick.color"] = "#9b9ea2"
+    rcParams["grid.color"] = "#262626"
+    rcParams["legend.labelcolor"] = "#c9cbcc"
 
 
 def make_figure(dpi: int = 100) -> Figure:
@@ -81,7 +96,7 @@ def _clean(ax):
     ax.set_yticks([])
     for s in ax.spines.values():
         s.set_linewidth(0.6)
-        s.set_color("#888888")
+        s.set_color("#3b3b3c")
 
 
 def _show(ax, arr, title, fixed: bool = True, cmap: str = "gray"):
@@ -103,7 +118,8 @@ def _text_box(ax, lines: list[str]):
     ax.set_xticks([])
     ax.set_yticks([])
     ax.text(0.5, 0.5, "\n".join(lines), transform=ax.transAxes,
-            ha="center", va="center", fontsize=9.5, family="monospace")
+            ha="center", va="center", fontsize=9.5, family="monospace",
+            color="#c9cbcc")
 
 
 def _fmt(v) -> str:
@@ -187,7 +203,7 @@ def _hist_bars(ax, h_mine, h_ref, title, log: bool = False):
     ax.set_xlabel("灰度 / 分箱")
     ax.set_ylabel("像素数")
     ax.legend(fontsize=8, frameon=False)
-    ax.grid(axis="y", alpha=0.25, linewidth=0.5)
+    ax.grid(axis="y", alpha=1.0, linewidth=0.5)
     ax.tick_params(labelsize=8)
 
 
@@ -197,14 +213,14 @@ def _hist_view(ax, res, diff: bool = False):
         hr = np.asarray(res.ref, dtype=np.float64)
         if diff:
             d = hm - hr
-            ax.bar(np.arange(len(d)), d, width=0.9, color="#7f7f7f")
-            ax.axhline(0, color="k", linewidth=0.6)
+            ax.bar(np.arange(len(d)), d, width=0.9, color=_C_INPUT)
+            ax.axhline(0, color="#6b6d70", linewidth=0.6)
             ax.set_title(f"计数差值 myimg − cv2　max|err|={_fmt(res.metrics['max_abs'])}")
             ax.set_xlabel("灰度 / 分箱")
             ax.set_ylabel("差值")
         else:
             _hist_bars(ax, hm, hr, f"直方图对比（bins={len(hm)}）", log=True)
-        ax.grid(axis="y", alpha=0.25, linewidth=0.5)
+        ax.grid(axis="y", alpha=1.0, linewidth=0.5)
         ax.tick_params(labelsize=8)
         return
     # image 类（hist_equalize / clahe）：比输入输出各自的分布
@@ -212,7 +228,7 @@ def _hist_view(ax, res, diff: bool = False):
     a = np.clip(np.asarray(res.mine, dtype=np.float64).ravel(), 0, 255)
     b = np.clip(np.asarray(res.ref, dtype=np.float64).ravel(), 0, 255)
     bins = np.arange(257) - 0.5
-    ax.hist(src, bins=bins, histtype="step", color="#7f7f7f", linewidth=0.8, label="输入")
+    ax.hist(src, bins=bins, histtype="step", color=_C_INPUT, linewidth=0.8, label="输入")
     ax.hist(a, bins=bins, histtype="step", color=_C_MINE, linewidth=1.1, label="myimg")
     ax.hist(b, bins=bins, histtype="step", color=_C_REF, linewidth=1.1, label="OpenCV")
     ax.set_yscale("log")
@@ -220,7 +236,7 @@ def _hist_view(ax, res, diff: bool = False):
     ax.set_xlabel("灰度")
     ax.set_ylabel("像素数（log）")
     ax.legend(fontsize=8, frameon=False)
-    ax.grid(alpha=0.25, linewidth=0.5)
+    ax.grid(alpha=1.0, linewidth=0.5)
     ax.tick_params(labelsize=8)
 
 
@@ -235,7 +251,7 @@ def _cdf_view(ax, res):
     ax.set_xlabel("灰度")
     ax.set_ylabel("累积占比")
     ax.legend(fontsize=8, frameon=False)
-    ax.grid(alpha=0.25, linewidth=0.5)
+    ax.grid(alpha=1.0, linewidth=0.5)
     ax.tick_params(labelsize=8)
 
 
@@ -244,10 +260,10 @@ def _otsu_view(ax, res, diff: bool = False):
     h = np.bincount(img.ravel(), minlength=256).astype(np.float64)
     tm, tr = float(res.mine), float(res.ref)
     if diff:
-        ax.bar(np.arange(256), h, width=1.0, color="#bbbbbb")
+        ax.bar(np.arange(256), h, width=1.0, color="#4b4b4d")
         ax.set_title(f"输入直方图　mine={tm:.0f} / cv2={tr:.0f} / 差={_fmt(res.metrics['max_abs'])}")
     else:
-        ax.bar(np.arange(256), h, width=1.0, color="#bbbbbb", label="输入直方图")
+        ax.bar(np.arange(256), h, width=1.0, color="#4b4b4d", label="输入直方图")
         ax.axvline(tm, color=_C_MINE, linewidth=1.6, label=f"myimg t={tm:.0f}")
         if tr != tm:
             ax.axvline(tr, color=_C_REF, linewidth=1.4, linestyle="--", label=f"cv2 t={tr:.0f}")
@@ -257,7 +273,7 @@ def _otsu_view(ax, res, diff: bool = False):
         ax.legend(fontsize=8, frameon=False, loc="upper right")
     ax.set_xlabel("灰度")
     ax.set_ylabel("像素数")
-    ax.grid(axis="y", alpha=0.25, linewidth=0.5)
+    ax.grid(axis="y", alpha=1.0, linewidth=0.5)
     ax.tick_params(labelsize=8)
 
 
@@ -306,7 +322,7 @@ def _area_bars(ax, res):
     ax.set_xlabel("第几个域（按面积降序）")
     ax.set_ylabel("面积 px（log）")
     ax.legend(fontsize=8, frameon=False)
-    ax.grid(axis="y", alpha=0.25, linewidth=0.5)
+    ax.grid(axis="y", alpha=1.0, linewidth=0.5)
     ax.tick_params(labelsize=8)
 
 
@@ -337,7 +353,7 @@ def _stats_compare(ax, res):
     ax.set_xlabel("第几个域")
     ax.set_ylabel("面积 px")
     ax.legend(fontsize=8, frameon=False)
-    ax.grid(axis="y", alpha=0.25, linewidth=0.5)
+    ax.grid(axis="y", alpha=1.0, linewidth=0.5)
     ax.tick_params(labelsize=8)
 
 
@@ -408,5 +424,5 @@ def draw(fig: Figure, res, view: str | None = None) -> None:
 
 
 def save_png(fig: Figure, path: str, dpi: int = 150) -> str:
-    fig.savefig(path, dpi=dpi, bbox_inches="tight", facecolor="white")
+    fig.savefig(path, dpi=dpi, bbox_inches="tight", facecolor="#070707")
     return path

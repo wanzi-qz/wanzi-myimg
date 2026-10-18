@@ -1,6 +1,6 @@
 # 进度与验收
 
-更新：2026-10-19 00:45　|　测试：741 passed / 0 failed　|　对拍：112 组（1.26.4 / cv2 4.10.0 / skimage 0.25.2）
+更新：2026-10-19 01:56　|　测试：747 passed / 0 failed　|　对拍：112 组（1.26.4 / cv2 4.10.0 / skimage 0.25.2）
 
 图例：✅ 对拍通过　🟡 口径不同、差异已记录不追求一致　❌ 待查
 
@@ -37,8 +37,14 @@
 - [x] 命令行 `examples/cli.py`（list / demo / run）
 - [x] 报告模板 `benchmarks/report_template.md`
 - [x] 可视化对拍台 `gui/`（Tkinter + matplotlib）：算子树 / 参数滑块 / 实现变体 /
-      信息格视图，判定口径复用 run_compare；另加 78 条 GUI 回归测试
-      （参数表 vs 签名逐条对齐、engine 全算子、render 全视图）
+      信息格视图，判定口径复用 run_compare；另加 84 条 GUI 回归测试
+      （参数表 vs 签名逐条对齐、engine 全算子、render 全视图、扫描序列、主题色）
+- [x] GUI 暗金主题：ttk 全控件 + matplotlib rcParams 对齐 wanzi.me 设计变量
+      （`#070707` 底 / `#d8b46a` 强调金），导出 PNG 与屏幕同色
+- [x] 参数扫描动画：左栏选参数点 + 帧数，画布逐帧刷新，状态区给区间与空帧说明；
+      `params.sweep_sequence` 为纯函数，测试里直接对拍
+- [x] HiDPI 布局修复：200% 缩放下 matplotlib 画布裁切（Map 时 device_pixel_ratio
+      翻倍撑爆 grid）与 Treeview 行高截字，均已在真机截图确认
 
 ## 已知差异（不粉饰，全部写在 compare.md 第 4 节）
 

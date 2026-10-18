@@ -189,3 +189,31 @@ def coerce(op: str, raw: dict) -> dict:
 def hints(op: str) -> list[str]:
     """当前算子所有参数的口径提醒，界面底部逐条显示。"""
     return [f"{p.label}：{p.hint}" for p in PARAMS.get(op, ()) if p.hint]
+
+
+def sweep_sequence(p: Param, steps: int = 24) -> list:
+    """参数扫描动画的取值序列。
+
+    choice 型（ksize / mode / connectivity）按候选顺序走完；
+    数值型在 [lo, hi] 上 linspace 再去重：float 保留 digits+1 位小数，
+    int / odd 取整（odd 保证奇数）。纯函数，tests 里直接对拍输出。
+    """
+    if p.kind == "choice":
+        return list(p.options)
+    n = max(2, int(steps))
+    raw = [p.lo + (p.hi - p.lo) * i / (n - 1) for i in range(n)]
+    if p.kind == "float":
+        out_f: list[float] = []
+        for v in raw:
+            r = round(v, p.digits + 1)
+            if not out_f or out_f[-1] != r:
+                out_f.append(r)
+        return out_f
+    out: list[int] = []
+    for v in raw:
+        k = int(round(v))
+        if p.kind == "odd" and k % 2 == 0:
+            k += 1
+        if not out or out[-1] != k:
+            out.append(k)
+    return out
