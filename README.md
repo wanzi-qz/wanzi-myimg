@@ -2,6 +2,8 @@
 
 纯NumPy手写常用图像处理算子，逐个与 OpenCV/scikit-image 对拍，把误差、耗时、差异原因都记下来。
 
+> 📖 完整产品使用说明（背景 / 原理 / 操作 / 结果解释 / FAQ）：[docs/user_guide.md](docs/user_guide.md)
+
 ## 为什么做这个
 
 有些图像算子属于会调、但是说不清里面在算什么。
