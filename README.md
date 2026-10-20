@@ -33,6 +33,11 @@ gui/              可视化对拍台（Tkinter + matplotlib，应用层，允许
   engine.py       调 myimg / OpenCV；误差与判定复用 benchmarks，不重写口径
   render.py       2x2 四格渲染，右下信息格看「差在哪、差多少」
   app.py          窗口 / 控件 / 事件；python -m gui 启动
+  theme.py        暗金主题色板 + 判定用色（web 版共用）
+  anim.py         扫描 GIF 的组帧与并帧（web 版共用）
+web/              浏览器版对拍台（Streamlit，同一套 engine / render / 口径）
+  app.py          streamlit run web/app.py 启动；侧栏选算子，主区四格 + 扫描
+tools/            gui_main.py（exe 入口，认 --selftest 自检）+ build_exe.py（打包脚本）
 notes/            报错本、默写记录
 data/             真实图片放这里（已 gitignore，只留 README）
 PROGRESS.md       验收清单 + 面试复述清单
@@ -60,6 +65,11 @@ pytest tests/test_filters.py -k gaussian   # 单个算子
 python benchmarks/run_compare.py --all --figures   # 误差表+耗时表+对比图
 python examples/cli.py demo canny --case microscope --sigma 1.4 -o out.png
 python -m gui                     # 可视化对拍台（见下节）
+
+pip install -e ".[web]"           # 只多装一个 streamlit
+streamlit run web/app.py          # 浏览器版对拍台（同一套计算核，见下节）
+pip install -e ".[pack]"
+python tools/build_exe.py         # 打 dist/myimg-gui.exe（体积与 venv 见下节）
 ```
 
 报告在 `benchmarks/out/compare.md`：误差表、耗时表、差异归因、已核对的口径事实四节。
@@ -108,8 +118,73 @@ Tkinter + matplotlib，零额外依赖（tkinter 是标准库，matplotlib 已�
 回归测试在 `tests/test_gui_engine.py`：参数表 key 与 myimg 签名逐条对齐、
 全算子 × 默认参数 engine 不抛异常、全信息格视图 render 不崩（Agg 后端，不弹窗）；
 扫描取值序列（choice 原序 / 舍入去重 / odd 保奇 / steps 兜底）与暗色主题色token
-也各有回归项，全仓 749 条测试全绿。
+也各有回归项，全仓 777 条测试全绿。
 
+## Web 对拍台（Streamlit）
+
+```bash
+pip install -e ".[web]"
+streamlit run web/app.py
+```
+
+桌面版能干的事这里都能干，区别只是跑在浏览器里：侧栏选分组 / 算子 / 变体 / 用例 /
+尺寸，也能上传本地图；主区一行信息格下拉（边缘叠加 / 差值热图 / Otsu 直方图 /
+均衡 CDF / 连通域柱状）加 2×2 画布，PNG 直接下载；下面「参数扫描」展开是折线图 +
+明细表 + 循环 GIF，宽度与抽帧同样可选。
+
+关键是**没有另写一套逻辑**：算子调用走 `gui/engine.py`，判定口径还是
+`benchmarks.run_compare.compare_one`，画布还是 `gui/render.py`，扫描取值还是
+`params.sweep_sequence`，GIF 组帧还是 `gui/anim.py`。web 层只做三件事——
+把控件值喂给 engine、把 matplotlib 的 Figure 转成位图、把结果摆到页面上。
+桌面版修好一个口径 bug，web 版自动跟着好；反过来也一样。
+
+为了让 web 不拖着 tkinter 一起 import，主题色板（`gui/theme.py`）、GIF 组帧
+（`gui/anim.py`）、状态行文案（`engine.headline` / `render.summary_line`）都抽成了
+独立模块，`gui/app.py` 只做 re-export，桌面版行为一行没改。`tests/test_web_app.py`
+里有一条专门在子进程里把 tkinter 掐掉再 import `web.app`，防止哪天又被拽回来。
+
+两处踩过：裸 `Figure` 的 canvas 是 `FigureCanvasBase`，没有 `buffer_rgba`，
+得换成 `FigureCanvasAgg` 再 `draw()` 才拿得到像素（`web/app.py::grab_frame`）；
+`st.image(..., use_container_width=True)` 在 streamlit 1.37 上还不存在，说明文字走
+`caption=`。
+
+## 打包成 exe
+
+```bash
+pip install -e ".[pack]"
+python tools/build_exe.py            # -> dist/myimg-gui.exe
+python tools/build_exe.py --onedir   # 启动快，但要整个文件夹一起发
+python tools/build_exe.py --console  # 留控制台，崩了看得见 traceback
+```
+
+打的是**桌面版**（Tkinter），不是 web 版：双击 `dist/myimg-gui.exe` 就出窗口，
+对方机器不用装 Python。onefile 启动要先解包到临时目录，第一次点开等几秒是正常的。
+
+**打包请在独立 venv 里做，别直接用 Anaconda。** Anaconda 环境里 matplotlib / PIL 的
+hook 会顺手把 Qt 绑定、torch、panel/bokeh、imageio 的 ffmpeg 全拖进来——第一版包出来
+759 MB，启动解包一分多钟才出窗口、临时目录占 2 GB；换成只装 pip 轮子的 venv 之后
+同一条命令产物 105.9 MB、打包 107 秒、双击 4.8 秒出窗口：
+
+```bash
+W:\Anaconda\python.exe -m venv .venv-pack        # 用哪个 base python 都行
+.venv-pack\Scripts\python -m pip install numpy==1.26.4 opencv-python-headless==4.10.0.84 ^
+    scikit-image==0.25.2 matplotlib==3.9.2 pillow==10.4.0 pyinstaller==6.22.3
+.venv-pack\Scripts\python tools\build_exe.py     # -> dist\myimg-gui.exe
+```
+
+`.venv-pack/` 在 .gitignore 里。非要在 Anaconda 里打也行：`tools/build_exe.py` 的
+EXCLUDES 会把 Qt / torch / pandas 这批大块头掐掉（`--no-exclude` 还原），但 numpy 自己
+依赖的 MKL 掐不掉，体积下限就在那儿。
+
+exe 还认一个 `--selftest`：不开窗口，把滤波 / 阈值 / 边缘 / 连通域四条链路各跑一遍，
+再渲染一张图、拼一段 GIF，返回码 0 = 打包没漏模块。windowed 的 exe 崩了没有控制台
+可看，所以每次打完包先跑一遍 `dist\myimg-gui.exe --selftest` 体检。
+
+`tools/build_exe.py` 里有两条参数是踩出来的，注释就写在脚本头上：`myimg.histogram`
+在 engine / run_compare 里是 `importlib.import_module` 动态取的，静态分析扫不到，
+得 `--hidden-import` 兜住；`myimg` 和 `benchmarks` 两个包都要 `--collect-submodules`，
+否则打完一调判定就 ModuleNotFoundError。`build/`、`dist/`、`*.spec` 都在 .gitignore 里，
+不入库。
 ## 对标口径（2026-10-18 本机实测，numpy 1.26.4 / opencv-python 4.10.0 / scikit-image 0.25.2）
 
 对拍之前先把口径对齐，否则误差全是自己造的：

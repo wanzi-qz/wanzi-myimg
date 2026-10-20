@@ -9,7 +9,8 @@
     底部状态区   误差 / 耗时 / 口径说明 / 坑提示
 
 视觉规范取自 www.wanzi.me 的 CSS 变量：#070707 页面底、#0d0d0e 卡片、#262626 描边、
-#d8b46a 强调金、等宽字体走数字。色值全部集中在 THEME，改一处即可整体换肤。
+#d8b46a 强调金、等宽字体走数字。色值集中在 gui/theme.py，桌面版和 web 版共用，
+改一处两边一起换肤；GIF 导出在 gui/anim.py，同理。
 
 事件流：任何控件变化 -> _schedule() 防抖 150ms -> _recompute() ->
 engine.run() -> render.draw() -> 状态区刷新。自动刷新关掉时只更新参数显示，
@@ -35,104 +36,21 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from gui import engine, params as P, render   # noqa: E402
+from gui.anim import DEFAULT_FRAME_MS as FRAME_MS   # noqa: E402,F401  扫描帧间隔
+from gui.anim import GIF_SKIPS, GIF_WIDTHS   # noqa: E402
+from gui.anim import assemble_gif, prepare_gif_frames   # noqa: E402
+from gui.theme import THEME, _blend, _hex_rgb   # noqa: E402,F401
+from gui.theme import verdict_tone   # noqa: E402
 
 SIZES = (64, 96, 128, 192, 256, 384, 512)
 DEBOUNCE_MS = 150
-FRAME_MS = 150          # 参数扫描的帧间隔：比防抖稍慢一点，肉眼跟得上
-SWEEP_STEPS = (12, 24, 36, 48)
-GIF_WIDTHS = ("480", "720", "960")   # 导出宽度：缓存帧就是 960，只往下缩不放大
-GIF_SKIPS = ("1", "2", "3", "4")     # 抽帧：隔 k 帧取一帧，帧间隔同步乘 k
+SWEEP_STEPS = P.SWEEP_STEPS   # 与 web 版共用一份候选
 
-_OK = ("逐像素精确", "一致", "浮点噪声级一致", "IoU 合格")
-_WARN = ("仅记录", "两边都无边缘")
-_BAD = ("超出容差", "不一致", "IoU 偏低")
-
-# --- 主题：wanzi.me 的 :root 设计变量 ----------------------------------------
-THEME = {
-    "bg": "#070707",          # --bg：页面底
-    "bg_soft": "#0a0a0b",     # --bg-soft：树、状态区、输入框底
-    "panel": "#0d0d0e",       # --panel：卡片 / 控件底
-    "hover": "#161617",
-    "line": "#262626",        # --line：常规描边
-    "line_soft": "#1b1b1c",   # --line-soft：卡片描边
-    "hover_line": "#3b3b3c",
-    "ink": "#f3f3f1",         # --ink：主文字
-    "ink_soft": "#ededeb",
-    "muted": "#9b9ea2",       # --muted：次要文字
-    "faint": "#6b6d70",       # --faint：最弱
-    "gold": "#d8b46a",        # 强调金（active tab 下划线、渐变标题都用它）
-    "gold_dim": "#b98f3e",
-    "gold_pale": "#f6e7c4",
-    "gold_soft": "#1a1610",   # 金色按钮 / 选中项的底
-    "gold_line": "#5d4d2b",
-    "ok": "#86c991",
-    "warn": "#d8b46a",
-    "bad": "#e0707a",
-    "info": "#c9cbcc",
-    "note": "#6b6d70",
-}
 
 MONO_CANDIDATES = ["Cascadia Mono", "Cascadia Code", "JetBrains Mono", "Consolas",
                    "DejaVu Sans Mono"]
 CN_CANDIDATES = ["HarmonyOS Sans SC", "Microsoft YaHei UI", "Microsoft YaHei",
                  "PingFang SC", "Noto Sans CJK SC", "SimHei"]
-
-
-def _hex_rgb(c: str) -> tuple[int, int, int]:
-    c = c.lstrip("#")
-    return int(c[0:2], 16), int(c[2:4], 16), int(c[4:6], 16)
-
-
-def _blend(fg: str, bg: str, a: float) -> str:
-    """把 fg 按透明度 a 混到 bg 上，返回十六进制色。"""
-    f, b = _hex_rgb(fg), _hex_rgb(bg)
-    return "#%02x%02x%02x" % tuple(int(round(b[i] + (f[i] - b[i]) * a)) for i in range(3))
-
-
-def assemble_gif(frames, path, duration_ms: int = FRAME_MS) -> int:
-    """把一列 PIL 帧写成循环 GIF，返回文件字节数。
-
-    调色板取自「全部帧缩略图拼成的马赛克」：只用第一帧的话，万一首帧色少
-    （比如纯色用例），后面帧的颜色会被量化碾平、帧间全同被 PIL 并帧；
-    各帧独立调色板又会闪。马赛克用最近邻取样、再贴上主题与渲染强调色的
-    标准色块，1px 细彩线也不会在取色时丢。不加抖动——界面本来就是大平色块，
-    抖出来的噪点只会把体积撑大。
-    """
-    from PIL import Image
-    thumbs = [f.convert("RGB").resize((64, 40), Image.NEAREST) for f in frames]
-    swatches = [THEME[k] for k in ("bg", "panel", "ink", "muted", "gold")] + [
-        render._C_MINE, render._C_REF, render._C_INPUT] + [
-        "#%02x%02x%02x" % tuple(round(c * 255) for c in rgb)
-        for rgb in (render._C_EDGE_MINE, render._C_EDGE_REF, render._C_EDGE_BOTH)]
-    strip = Image.new("RGB", (64 * len(thumbs) + 16 * len(swatches), 40))
-    x = 0
-    for t in thumbs:
-        strip.paste(t, (x, 0))
-        x += 64
-    for c in swatches:
-        strip.paste(Image.new("RGB", (16, 40), c), (x, 0))
-        x += 16
-    pal = strip.quantize(colors=256, dither=Image.NONE)
-    q = [f.convert("RGB").quantize(palette=pal, dither=Image.NONE) for f in frames]
-    q[0].save(path, save_all=True, append_images=q[1:],
-              duration=int(duration_ms), loop=0, optimize=True)
-    return pathlib.Path(path).stat().st_size
-
-
-def prepare_gif_frames(frames, width: int, skip: int):
-    """导出前的帧处理：隔 skip 帧取一帧，再缩到 width 宽。
-
-    返回 (帧列表, 每帧毫秒)。帧间隔乘 skip，这样抽帧之后播放速度仍接近
-    扫描时的实时速度，而不是变成快进。不改动传入的缓存帧。
-    """
-    from PIL import Image
-    k = max(1, int(skip))
-    sel = list(frames[::k])
-    w = max(1, int(width))
-    if sel and sel[0].width != w:
-        h = max(1, round(sel[0].height * w / sel[0].width))
-        sel = [f.resize((w, h), Image.LANCZOS) for f in sel]
-    return sel, FRAME_MS * k
 
 
 def _pick_family(root, candidates, fallback: str) -> str:
@@ -823,7 +741,7 @@ class App:
             res = engine.run(self.cur_op, self.cur_variant, raw, img, self.cur_case)
         except Exception as exc:
             self._status_error(f"{type(exc).__name__}: {exc}")
-            return
+            return None
         self.res = res
         views = render.views_for(res)
         self.view_cb.configure(values=views)
@@ -832,6 +750,7 @@ class App:
         self.view_var.set(self.cur_view)
         render.draw(self.fig, res, self.cur_view)
         self._update_status(res)
+        return res
 
     # ------------------------------------------------------------ 参数扫描
     def _sweep_param(self):
@@ -868,6 +787,7 @@ class App:
         self._sweep_i = 0
         self._sweep_rows = []
         self._sweep_empty = 0
+        self._sweep_failed = 0
         self._sweep_frames = []
         self._sweep_meta = (self.cur_op, p.key)
         try:
@@ -888,18 +808,27 @@ class App:
         v = self._sweep_seq[self._sweep_i]
         self._set_param_value(p, v)
         try:
-            self._recompute()
+            res = self._recompute()
         except tk.TclError:           # 窗口在扫描中被关掉
             self._stop_sweep()
             return
-        name, val = self._headline(self.res)
-        if self.res.kind == "iou" and self.res.metrics.get("both_empty"):
+        self._sweep_i += 1
+        pos = f"{self._sweep_i}/{len(self._sweep_seq)}"
+        if res is None:
+            # 这一档算子抛了异常（比如 sobel 的 mode=wrap，cv2 不收 BORDER_WRAP）。
+            # self.res 还是上一档的，绝不能拿它当这一档的结果记下来。
+            self._sweep_failed += 1
+            self.sweep_info_var.set(f"{p.label}={self._fmt_sweep_v(p, v)}　{pos}　"
+                                    f"这一档算子抛异常，已跳过")
+            self._sweep_after = self.root.after(FRAME_MS, self._sweep_tick)
+            return
+        name, val = self._headline(res)
+        if res.kind == "iou" and res.metrics.get("both_empty"):
             self._sweep_empty += 1
         self._sweep_rows.append((v, val))
-        self._sweep_i += 1
         shown = render._fmt(val) if val is not None else "-"
         self.sweep_info_var.set(f"{p.label}={self._fmt_sweep_v(p, v)}　"
-                                f"{self._sweep_i}/{len(self._sweep_seq)}　{name} {shown}")
+                                f"{pos}　{name} {shown}")
         self._capture_sweep_frame()
         self._sweep_after = self.root.after(FRAME_MS, self._sweep_tick)
 
@@ -961,6 +890,9 @@ class App:
         if getattr(self, "_sweep_empty", 0):
             summary += (f"。其中 {self._sweep_empty} 帧两边都无边缘，"
                         f"IoU=1 只表示「都空」，不代表对齐")
+        if getattr(self, "_sweep_failed", 0):
+            summary += (f"。另有 {self._sweep_failed} 个取值算子直接抛异常"
+                        f"（基准不收这个口径），已跳过")
         self._status_append(summary + "\n", "warn")
         self.sweep_info_var.set(f"完成 {len(rows)} 帧　{name} "
                                 f"{render._fmt(vals[lo_i])} ~ {render._fmt(vals[hi_i])}")
@@ -1009,24 +941,8 @@ class App:
 
     @staticmethod
     def _headline(res):
-        """这一帧最该盯的那个数：不同 kind 的算子主指标不一样。"""
-        if res is None:
-            return "指标", None
-        m = res.metrics or {}
-        k = res.kind
-        if k == "iou":
-            return "IoU", m.get("iou")
-        if k == "tuple3":
-            pc = (m.get("per_component") or {}).get("mag") or {}
-            return "mag max|err|", pc.get("max_abs")
-        if k == "labels":
-            try:
-                return "个数差", abs(int(m.get("mine_n", 0)) - int(m.get("ref_n", 0)))
-            except (TypeError, ValueError):
-                return "个数差", None
-        if k == "stats":
-            return "外接框最大差", m.get("max_box_err")
-        return "max|err|", m.get("max_abs")
+        """这一帧最该盯的那个数（逻辑在 engine.headline，web 版共用）。"""
+        return engine.headline(res)
 
     # ---------------------------------------------------------------- 显示
     def _on_motion(self, event):
@@ -1054,38 +970,12 @@ class App:
         t.configure(state="disabled")
 
     def _update_status(self, res):
-        m = res.metrics
         t = self.status
         t.configure(state="normal")
         t.delete("1.0", "end")
 
-        kind = res.kind
-        if kind == "image":
-            line = (f"max|err| = {render._fmt(m.get('max_abs'))}　"
-                    f"mean|err| = {render._fmt(m.get('mean_abs'))}")
-            if m.get("n_over_tol") is not None:
-                line += (f"　超容差 {m['n_over_tol']} 像素"
-                         f"（{m['pct_over_tol']:.3f}%）")
-        elif kind == "tuple3":
-            pc = m["per_component"]
-            line = "三分量 max|err|：" + "　".join(
-                f"{k}={render._fmt(v['max_abs'])}" for k, v in pc.items())
-        elif kind == "scalar":
-            line = f"myimg t={m['mine']:.0f}　cv2 t={m['ref']:.0f}　差 {render._fmt(m['max_abs'])}"
-        elif kind == "counts":
-            line = f"bins={len(res.mine)}　max|err| = {render._fmt(m['max_abs'])}"
-        elif kind == "labels":
-            line = (f"连通域个数 {m['mine_n']} vs {m['ref_n']}　"
-                    f"面积多重集合{'一致' if m['areas_match'] else '不一致'}")
-        elif kind == "stats":
-            line = (f"域数 {m['n_regions']}　外接框最大差 {m['max_box_err']} px　"
-                    f"质心最大差 {render._fmt(m['max_centroid_err'])} px")
-        else:  # iou
-            line = (f"IoU = {m['iou']:.3f}　我的 {m['mine_px']} px / "
-                    f"cv2 {m['ref_px']} px"
-                    + ("　（两边都空）" if m.get("both_empty") else ""))
-
-        tag = "ok" if res.verdict in _OK else ("warn" if res.verdict in _WARN else "bad")
+        line = render.summary_line(res)
+        tag = verdict_tone(res.verdict)
         t.insert("end", f"{line}\n判定：{res.verdict}　（口径 = 报告里的 {res.spec_op}）\n", tag)
 
         slow = res.slowdown

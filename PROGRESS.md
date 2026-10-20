@@ -1,6 +1,6 @@
 # 进度与验收
 
-更新：2026-10-20 22:42　|　测试：749 passed / 0 failed　|　对拍：112 组（1.26.4 / cv2 4.10.0 / skimage 0.25.2）
+更新：2026-10-21 00:06　|　测试：777 passed / 0 failed　|　对拍：112 组（1.26.4 / cv2 4.10.0 / skimage 0.25.2）
 
 图例：✅ 对拍通过　🟡 口径不同、差异已记录不追求一致　❌ 待查
 
@@ -51,6 +51,26 @@
       全同会被合并，纯色首帧做调色板会把后续帧碾平）
 - [x] GIF 导出规格可选：宽度 480/720/960、抽帧 1~4（帧间隔乘抽帧倍数，
       播放速度不掉成快进）；`prepare_gif_frames` 纯函数带回归
+- [x] 为共用抽模块：`gui/theme.py`（主题色板 + 判定用色）、`gui/anim.py`（GIF 组帧）、
+      `engine.headline` / `render.summary_line`（状态行文案）；`gui/app.py` 只做
+      re-export，桌面版行为一行没改
+- [x] Web 版对拍台 `web/app.py`（Streamlit）：侧栏分组/算子/变体/用例/尺寸/上传图，
+      主区信息格下拉 + 2×2 画布 + PNG 下载，「参数扫描」给折线图 / 明细表 / 循环 GIF；
+      计算核与判定口径全部复用 `gui/engine.py` + `benchmarks.run_compare`，web 层不重写
+      任何数值逻辑。另加 17 条 `tests/test_web_app.py` 回归（含子进程掐掉 tkinter 后
+      import `web.app` 的干净性）
+- [x] 扫描容错：某一档抛异常（如 sobel 的 `mode='wrap'` 被 `cv2.Sobel` 拒）不再把上一档
+      结果当这一档记下——桌面版跳过并在状态区报出错档数，web 版记成「运行出错」行
+- [x] 桌面版打包 exe：`tools/gui_main.py`（frozen 入口，走 `sys._MEIPASS`）+
+      `tools/build_exe.py`（PyInstaller onefile/windowed，`--collect-submodules myimg
+      benchmarks`、`--hidden-import myimg.histogram` 补动态 import，EXCLUDES 掐
+      Qt/torch/pandas 等大块头）；Anaconda 直打实测 759 MB / 解包 2 GB，改用独立
+      venv（`.venv-pack`，只装 pip 轮子）后产物 105.9 MB、打包 107 秒、双击 4.8 秒出窗口；
+      exe 自检 `dist\myimg-gui.exe --selftest` 返回 0（4.7 秒跑完四条链路 + 渲染 + GIF）
+- [x] exe 自检 `--selftest`：不开窗口跑滤波/阈值/边缘/连通域 + 渲染 + GIF，返回码 0
+      = 没漏模块；每次打包后先体检再交付（windowed 崩了没控制台可看）
+- [x] `grab_frame` 从 web/app.py 搬到 `gui/anim.py`：桌面扫描缓存帧、web 下载按钮、
+      exe 自检三处共用一份
 
 ## 已知差异（不粉饰，全部写在 compare.md 第 4 节）
 

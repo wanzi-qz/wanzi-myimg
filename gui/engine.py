@@ -190,6 +190,31 @@ class RunResult:
         return self.t_mine / self.t_ref if self.t_ref > 0 else float("inf")
 
 
+def headline(res: "RunResult | None") -> tuple[str, Any]:
+    """这一帧最该盯的那个数：不同 kind 的算子主指标不一样。
+
+    桌面版拿它刷状态区，web 版的扫描折线也是把这个值逐帧收下来，
+    所以放 engine 而不是 app。
+    """
+    if res is None:
+        return "指标", None
+    m = res.metrics or {}
+    k = res.kind
+    if k == "iou":
+        return "IoU", m.get("iou")
+    if k == "tuple3":
+        pc = (m.get("per_component") or {}).get("mag") or {}
+        return "mag max|err|", pc.get("max_abs")
+    if k == "labels":
+        try:
+            return "个数差", abs(int(m.get("mine_n", 0)) - int(m.get("ref_n", 0)))
+        except (TypeError, ValueError):
+            return "个数差", None
+    if k == "stats":
+        return "外接框最大差", m.get("max_box_err")
+    return "max|err|", m.get("max_abs")
+
+
 def _warnings(op: str, variant: str, kw: dict, img: np.ndarray,
               case: str, spec: Spec) -> list[str]:
     """界面上要提前说清楚的坑，别等用户看到「超出容差」再猜。"""

@@ -3,6 +3,8 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+*.spec
+*.manifest
 .pytest_cache/
 .venv/
 venv/
@@ -14,3 +16,6 @@ data/*
 # 对拍产物：json 保留可追溯，图片不入库
 benchmarks/out/*.png
 benchmarks/out/*.jpg
+
+# 打包用的独立 venv（pip 轮子，比 Anaconda 小一个数量级）
+.venv-pack/

@@ -360,6 +360,40 @@ def _stats_compare(ax, res):
 # ---------------------------------------------------------------------------
 # 主入口
 # ---------------------------------------------------------------------------
+def summary_line(res) -> str:
+    """状态区第一行：按 kind 挑这一类算子最该看的数。
+
+    桌面版和 web 版共用这一句，改口径只改这里，两边不会各说各话。
+    """
+    m = res.metrics
+    kind = res.kind
+    if kind == "image":
+        line = (f"max|err| = {_fmt(m.get('max_abs'))}　"
+                f"mean|err| = {_fmt(m.get('mean_abs'))}")
+        if m.get("n_over_tol") is not None:
+            line += (f"　超容差 {m['n_over_tol']} 像素"
+                     f"（{m['pct_over_tol']:.3f}%）")
+    elif kind == "tuple3":
+        pc = m["per_component"]
+        line = "三分量 max|err|：" + "　".join(
+            f"{k}={_fmt(v['max_abs'])}" for k, v in pc.items())
+    elif kind == "scalar":
+        line = f"myimg t={m['mine']:.0f}　cv2 t={m['ref']:.0f}　差 {_fmt(m['max_abs'])}"
+    elif kind == "counts":
+        line = f"bins={len(res.mine)}　max|err| = {_fmt(m['max_abs'])}"
+    elif kind == "labels":
+        line = (f"连通域个数 {m['mine_n']} vs {m['ref_n']}　"
+                f"面积多重集合{'一致' if m['areas_match'] else '不一致'}")
+    elif kind == "stats":
+        line = (f"域数 {m['n_regions']}　外接框最大差 {m['max_box_err']} px　"
+                f"质心最大差 {_fmt(m['max_centroid_err'])} px")
+    else:  # iou
+        line = (f"IoU = {m['iou']:.3f}　我的 {m['mine_px']} px / "
+                f"cv2 {m['ref_px']} px"
+                + ("　（两边都空）" if m.get("both_empty") else ""))
+    return line
+
+
 def draw(fig: Figure, res, view: str | None = None) -> None:
     """重画整张 2×2。view 为空就用该算子的默认视图。"""
     view = view or default_view(res)

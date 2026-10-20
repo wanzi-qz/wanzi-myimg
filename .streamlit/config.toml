@@ -1,0 +1,11 @@
+# web 版外壳配色：和 gui/theme.py 里那组 wanzi.me 设计变量同一份。
+# 这里只管 streamlit 自己的背景 / 侧栏 / 控件；画布里的色由 render.setup_style() 定。
+[theme]
+base = "dark"
+backgroundColor = "#070707"
+secondaryBackgroundColor = "#0d0d0e"
+textColor = "#f3f3f1"
+primaryColor = "#d8b46a"
+
+[browser]
+gatherUsageStats = false

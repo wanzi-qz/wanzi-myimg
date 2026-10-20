@@ -53,6 +53,9 @@ BINARY_OPS = frozenset({"erode", "dilate", "morph_open", "morph_close",
 
 # 选中这类算子时界面自动切到这个用例，省得用户对着灰度图纳闷
 DEFAULT_CASE_FOR_BINARY = "blobs"
+
+# 参数扫描的帧数候选：桌面版和 web 版共用（帧越多越细，也越慢）
+SWEEP_STEPS = (12, 24, 36, 48)
 DEFAULT_CASE_FOR_GRAY = "microscope"
 
 PARAMS: dict[str, tuple[Param, ...]] = {

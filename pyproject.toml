@@ -19,6 +19,14 @@ dev = [
     "scikit-image>=0.22",
     "matplotlib>=3.7",
     "pandas>=2.0",
+    "pillow>=10.0",     # 扫描 GIF 导出
+]
+web = [
+    "myimg[dev]",
+    "streamlit>=1.30",  # web 版对拍台：streamlit run web/app.py
+]
+pack = [
+    "pyinstaller>=6.0", # 打桌面版 exe：python tools/build_exe.py
 ]
 
 [tool.setuptools]
