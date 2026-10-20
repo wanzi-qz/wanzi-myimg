@@ -143,10 +143,12 @@ streamlit run web/app.py
 独立模块，`gui/app.py` 只做 re-export，桌面版行为一行没改。`tests/test_web_app.py`
 里有一条专门在子进程里把 tkinter 掐掉再 import `web.app`，防止哪天又被拽回来。
 
-两处踩过：裸 `Figure` 的 canvas 是 `FigureCanvasBase`，没有 `buffer_rgba`，
-得换成 `FigureCanvasAgg` 再 `draw()` 才拿得到像素（`web/app.py::grab_frame`）；
+三处踩过：裸 `Figure` 的 canvas 是 `FigureCanvasBase`，没有 `buffer_rgba`，
+得换成 `FigureCanvasAgg` 再 `draw()` 才拿得到像素（`gui/anim.py::grab_frame`）；
 `st.image(..., use_container_width=True)` 在 streamlit 1.37 上还不存在，说明文字走
-`caption=`。
+`caption=`；**改了 `gui/` 下的共用模块必须重启服务**——streamlit 改页面只重跑
+`web/app.py`，不会重新 import 已经加载进内存的模块，旧服务会拿着搬家前的
+`gui.anim` 报 ImportError，看着像代码坏了，其实重启就好。
 
 ## 打包成 exe
 
