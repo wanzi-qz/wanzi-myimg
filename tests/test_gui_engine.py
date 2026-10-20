@@ -177,3 +177,14 @@ def test_assemble_gif_frames_palette_and_duration(tmp_path):
     im.seek(1)
     r, g, b = im.convert("RGB").getpixel((0, 0))
     assert abs(r - 216) <= 2 and abs(g - 180) <= 2 and abs(b - 106) <= 2
+def test_prepare_gif_frames_skip_width_and_duration():
+    from PIL import Image
+    from gui import app as A
+    frames = [Image.new("RGB", (96, 60), (i * 7 % 256, 0, 0)) for i in range(10)]
+    sel, ms = A.prepare_gif_frames(frames, 48, 3)
+    assert len(sel) == 4                      # 0 3 6 9
+    assert sel[0].size == (48, 30)
+    assert ms == A.FRAME_MS * 3               # 抽帧后放慢，播放速度不掉
+    sel2, ms2 = A.prepare_gif_frames(frames, 96, 1)
+    assert len(sel2) == 10 and sel2[0].size == (96, 60) and ms2 == A.FRAME_MS
+    assert len(frames) == 10 and frames[0].size == (96, 60)   # 缓存帧不被改

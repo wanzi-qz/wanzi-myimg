@@ -40,6 +40,8 @@ SIZES = (64, 96, 128, 192, 256, 384, 512)
 DEBOUNCE_MS = 150
 FRAME_MS = 150          # 参数扫描的帧间隔：比防抖稍慢一点，肉眼跟得上
 SWEEP_STEPS = (12, 24, 36, 48)
+GIF_WIDTHS = ("480", "720", "960")   # 导出宽度：缓存帧就是 960，只往下缩不放大
+GIF_SKIPS = ("1", "2", "3", "4")     # 抽帧：隔 k 帧取一帧，帧间隔同步乘 k
 
 _OK = ("逐像素精确", "一致", "浮点噪声级一致", "IoU 合格")
 _WARN = ("仅记录", "两边都无边缘")
@@ -115,6 +117,22 @@ def assemble_gif(frames, path, duration_ms: int = FRAME_MS) -> int:
     q[0].save(path, save_all=True, append_images=q[1:],
               duration=int(duration_ms), loop=0, optimize=True)
     return pathlib.Path(path).stat().st_size
+
+
+def prepare_gif_frames(frames, width: int, skip: int):
+    """导出前的帧处理：隔 skip 帧取一帧，再缩到 width 宽。
+
+    返回 (帧列表, 每帧毫秒)。帧间隔乘 skip，这样抽帧之后播放速度仍接近
+    扫描时的实时速度，而不是变成快进。不改动传入的缓存帧。
+    """
+    from PIL import Image
+    k = max(1, int(skip))
+    sel = list(frames[::k])
+    w = max(1, int(width))
+    if sel and sel[0].width != w:
+        h = max(1, round(sel[0].height * w / sel[0].width))
+        sel = [f.resize((w, h), Image.LANCZOS) for f in sel]
+    return sel, FRAME_MS * k
 
 
 def _pick_family(root, candidates, fallback: str) -> str:
@@ -359,6 +377,8 @@ class App:
         self.sweep_var = tk.StringVar()
         self.sweep_steps_var = tk.StringVar(value="24")
         self.sweep_info_var = tk.StringVar(value="")
+        self.gif_w_var = tk.StringVar(value="960")
+        self.gif_skip_var = tk.StringVar(value="1")
 
         self._build_toolbar()
         self._build_hairline()
@@ -500,9 +520,20 @@ class App:
                                         command=self._save_sweep_gif)
         self.sweep_gif_btn.grid(row=1, column=2, columnspan=2, sticky="w",
                                 padx=(8, 0), pady=(7, 0))
+        ttk.Label(sf, text="GIF 宽", style="Card.Faint.TLabel").grid(
+            row=2, column=0, sticky="w", pady=(6, 0))
+        self.gif_w_cb = ttk.Combobox(sf, textvariable=self.gif_w_var, state="readonly",
+                                     width=4, values=GIF_WIDTHS, font=self.fonts["mono9"])
+        self.gif_w_cb.grid(row=2, column=1, sticky="w", padx=(4, 10), pady=(6, 0))
+        ttk.Label(sf, text="抽帧", style="Card.Faint.TLabel").grid(
+            row=2, column=2, sticky="w", pady=(6, 0))
+        self.gif_skip_cb = ttk.Combobox(sf, textvariable=self.gif_skip_var,
+                                        state="readonly", width=4, values=GIF_SKIPS,
+                                        font=self.fonts["mono9"])
+        self.gif_skip_cb.grid(row=2, column=3, sticky="w", padx=(4, 0), pady=(6, 0))
         ttk.Label(sf, textvariable=self.sweep_info_var, style="Card.Faint.TLabel",
                   width=36, anchor="w", justify="left").grid(
-            row=2, column=0, columnspan=4, sticky="w", pady=(6, 0))
+            row=3, column=0, columnspan=4, sticky="w", pady=(6, 0))
         sf.columnconfigure(3, weight=1)
 
     def _build_canvas(self):
@@ -680,7 +711,7 @@ class App:
                         labels[0])
             self.sweep_var.set(pref)
         self.sweep_btn.configure(state="normal")
-        self.sweep_info_var.set("选好参数点「开始扫描」，画布逐帧刷新；扫完可存 GIF")
+        self.sweep_info_var.set("选好参数点「开始扫描」，画布逐帧刷新；扫完可存 GIF（宽/抽帧可选）")
 
     def _on_scale(self, p: P.Param, val: str, entry: ttk.Entry):
         try:
@@ -890,8 +921,16 @@ class App:
                 pass
 
     def _save_sweep_gif(self):
-        frames = self._sweep_frames
+        if len(self._sweep_frames) < 2:
+            return
+        try:
+            width = int(self.gif_w_var.get())
+            skip = int(self.gif_skip_var.get())
+        except ValueError:
+            width, skip = 960, 1
+        frames, ms = prepare_gif_frames(self._sweep_frames, width, skip)
         if len(frames) < 2:
+            self.sweep_info_var.set("抽帧后不足两帧，把抽帧调小一点")
             return
         op = self._sweep_meta[0] if self._sweep_meta else self.cur_op
         path = filedialog.asksaveasfilename(
@@ -899,9 +938,9 @@ class App:
             initialfile=f"sweep_{op}.gif", title="保存扫描动画")
         if not path:
             return
-        n = assemble_gif(frames, path, FRAME_MS)
-        self._status_append(f"扫描动画已存：{path}（{len(frames)} 帧，"
-                            f"{FRAME_MS} ms/帧，{n / 1024:.0f} KB）\n", "ok")
+        n = assemble_gif(frames, path, ms)
+        self._status_append(f"扫描动画已存：{path}（{len(frames)} 帧，{width} 宽，"
+                            f"{ms} ms/帧，{n / 1024:.0f} KB）\n", "ok")
 
     def _finish_sweep(self):
         p = self._sweep_param_def

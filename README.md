@@ -86,7 +86,8 @@ Tkinter + matplotlib，零额外依赖（tkinter 是标准库，matplotlib 已�
 黑底 `#070707` + 强调金 `#d8b46a`，matplotlib 信息格走同一套暗色 rcParams，
 导出 PNG 与屏幕同色。左栏「参数扫描」卡任选一个参数点与帧数，开始后画布
 逐帧刷新放动画，结束在状态区给出这一轮的取值区间与空帧说明；帧顺路按 960 宽
-缓存，扫完（或中途停止）点「存 GIF」导出循环动图，帧间隔与屏幕同为 150ms，
+缓存，扫完（或中途停止）点「存 GIF」导出循环动图；导出时宽度（480/720/960）
+与抽帧（隔 k 帧取一帧）可选，帧间隔随抽帧倍数放大，播放速度仍接近扫描实时。
 调色板由全帧马赛克 + 主题标准色块统一量化，不闪也不碾彩线。
 
 ![canny 边缘叠加](gui_preview_canny.png)
@@ -107,7 +108,7 @@ Tkinter + matplotlib，零额外依赖（tkinter 是标准库，matplotlib 已�
 回归测试在 `tests/test_gui_engine.py`：参数表 key 与 myimg 签名逐条对齐、
 全算子 × 默认参数 engine 不抛异常、全信息格视图 render 不崩（Agg 后端，不弹窗）；
 扫描取值序列（choice 原序 / 舍入去重 / odd 保奇 / steps 兜底）与暗色主题色token
-也各有回归项，全仓 748 条测试全绿。
+也各有回归项，全仓 749 条测试全绿。
 
 ## 对标口径（2026-10-18 本机实测，numpy 1.26.4 / opencv-python 4.10.0 / scikit-image 0.25.2）
 
