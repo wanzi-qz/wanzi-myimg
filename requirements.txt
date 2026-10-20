@@ -1,0 +1,9 @@
+# Streamlit Community Cloud / 本地 web 对拍台的依赖口径（与 pyproject [web] 一致）
+# opencv 用 headless：云端/服务器没有 GUI 库，避免拉 Qt 一堆so/dll
+numpy>=1.24
+matplotlib>=3.7
+pandas>=2.0
+pillow>=10.0
+streamlit>=1.30
+scikit-image>=0.22
+opencv-python-headless>=4.8

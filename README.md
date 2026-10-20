@@ -187,6 +187,21 @@ exe 还认一个 `--selftest`：不开窗口，把滤波 / 阈值 / 边缘 / 连
 得 `--hidden-import` 兜住；`myimg` 和 `benchmarks` 两个包都要 `--collect-submodules`，
 否则打完一调判定就 ModuleNotFoundError。`build/`、`dist/`、`*.spec` 都在 .gitignore 里，
 不入库。
+## 一键启动 / 停止（Windows 双击即用）
+
+- 启动：双击 `tools/start_demo.bat`。8501 没起就拉 streamlit，再起 cloudflared 公网隧道，
+  最后打印「本机 / 同局域网 / 公网」三条链接，公网链接顺带复制进剪贴板。
+- 停止：双击 `tools/stop_demo.bat`，按端口和进程名收掉 streamlit 与隧道。
+- 日志在 `%TEMP%\myimg-*.log`；免注册快速隧道的链接每次重启都会换，属正常现象。
+
+## 在线演示（Streamlit Community Cloud）
+
+- 依赖口径见根目录 `requirements.txt`（opencv 用 headless：云端没有 GUI 库）。
+- 部署三步：https://share.streamlit.io 用 GitHub 登录 → New app →
+  Repository `wanzi-qz/wanzi-myimg`、Branch `master`、Main file path `web/app.py` → Deploy。
+- 首装 opencv / scikit-image 约几分钟；免费档闲置会睡眠，有人访问时自动唤醒。
+- 全仓 `from __future__ import annotations`，代码兼容 Python 3.9+，Cloud 默认解释器直接可跑。
+
 ## 对标口径（2026-10-18 本机实测，numpy 1.26.4 / opencv-python 4.10.0 / scikit-image 0.25.2）
 
 对拍之前先把口径对齐，否则误差全是自己造的：
@@ -221,6 +236,8 @@ scipy 的 `reflect` 指的是**含边缘**的对称填充，跟 numpy 的 `refle
 ## 进度
 
 见 [PROGRESS.md](PROGRESS.md)。
+
+- 2026-10-21　推送至新仓库 GitHub `wanzi-qz/wanzi-myimg`；局域网 8501 放行（防火墙规则 `myimg-streamlit-8501`）；cloudflared 公网隧道 + `tools/start_demo.bat` / `stop_demo.bat` 一键启停；根目录 `requirements.txt` 对齐 Cloud 部署口径。
 
 ## License
 
