@@ -78,6 +78,10 @@
       compare.json 的 env 对 `requirements-ci.txt` 钉子（opencv 四段 vs 三段取前缀比）；
       另加 19 条 `tests/test_ci_check.py` 守门禁自己。依赖全部钉死版本，
       产物 compare-report 存 14 天（`if: always()`）
+- [x] CI 首跑实测（run 39473982917，ubuntu-latest / Python 3.12.15，job 68 秒）：
+      796 passed；112 组对拍的判定分布与 Windows 本机**逐字一致**——逐像素精确 60 /
+      浮点噪声级一致 20 / 一致 8 / IoU 合格 5 / 两边都无边缘 3 / 仅记录 16。
+      这条比「CI 绿了」更值钱：口径差异不是平台相关的，不是只在我这台机器上对得上
 
 ## 已知差异（不粉饰，全部写在 compare.md 第 4 节）
 
