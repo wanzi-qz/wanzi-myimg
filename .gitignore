@@ -19,3 +19,6 @@ benchmarks/out/*.jpg
 
 # 打包用的独立 venv（pip 轮子，比 Anaconda 小一个数量级）
 .venv-pack/
+
+# 本地复现 CI 门禁时的临时产物目录（run_compare --out ci-out）
+ci-out/

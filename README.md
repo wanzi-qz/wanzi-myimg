@@ -1,5 +1,7 @@
 # myimg
 
+[![CI](https://github.com/wanzi-qz/wanzi-myimg/actions/workflows/ci.yml/badge.svg)](https://github.com/wanzi-qz/wanzi-myimg/actions/workflows/ci.yml)
+
 纯NumPy手写常用图像处理算子，逐个与 OpenCV/scikit-image 对拍，把误差、耗时、差异原因都记下来。
 
 > 📖 完整产品使用说明（背景 / 原理 / 操作 / 结果解释 / FAQ）：[docs/user_guide.md](docs/user_guide.md)
@@ -118,7 +120,7 @@ Tkinter + matplotlib，零额外依赖（tkinter 是标准库，matplotlib 已�
 回归测试在 `tests/test_gui_engine.py`：参数表 key 与 myimg 签名逐条对齐、
 全算子 × 默认参数 engine 不抛异常、全信息格视图 render 不崩（Agg 后端，不弹窗）；
 扫描取值序列（choice 原序 / 舍入去重 / odd 保奇 / steps 兜底）与暗色主题色token
-也各有回归项，全仓 777 条测试全绿。
+也各有回归项，全仓 796 条测试全绿。
 
 ## Web 对拍台（Streamlit）
 
@@ -202,6 +204,33 @@ exe 还认一个 `--selftest`：不开窗口，把滤波 / 阈值 / 边缘 / 连
 - 首装 opencv / scikit-image 约几分钟；免费档闲置会睡眠，有人访问时自动唤醒。
 - 全仓 `from __future__ import annotations`，代码兼容 Python 3.9+，Cloud 默认解释器直接可跑。
 
+## CI（push 之后自动跑）
+
+`.github/workflows/ci.yml`，ubuntu-latest + Python 3.12。push 到 master、开 PR、
+或在 Actions 页面点 Run workflow 都会触发，两道门串在一个 job 里：
+
+1. **pytest 全量** —— 796 条回归（算子数值 / 契约 / GUI / Web / 打包链路 / 门禁自身）。
+2. **全量对拍 + 门禁** —— `run_compare.py --all --figures` 出 112 组报告，再交给
+   `tools/ci_check.py` 判红绿。
+
+`ci_check.py` 为什么必须有：`run_compare` 是报告工具不是裁判，出现「超出容差」它照样
+exit 0——在终端里人会看见，在 CI 里没人看见。它管三件事：BAD_VERDICTS 有没有出现、
+组数够不够（`--op` 名字打错时会安静地跑出 0 组，看着像全绿）、compare.json 里记的
+numpy / opencv / skimage / Python 版本和 `requirements-ci.txt` 的钉子是否一致。
+最后一条是这类项目最容易 silently 坏掉的地方：库一升级，容差口径就跟着漂。
+
+依赖全部钉死在 `requirements-ci.txt`（与本机 Anaconda 环境、文档里的「对拍基线」表逐字
+对应），不让 pip 顺手升级。产物 `compare-report`（compare.md / compare.json / 15 张对比图）
+保留 14 天，`if: always()`——红了也要传，出问题第一手要看的就是它。
+
+本地复现 CI：
+
+```bash
+python -m pytest
+python benchmarks/run_compare.py --all --figures
+python tools/ci_check.py --expect-python 3.12
+```
+
 ## 对标口径（2026-10-18 本机实测，numpy 1.26.4 / opencv-python 4.10.0 / scikit-image 0.25.2）
 
 对拍之前先把口径对齐，否则误差全是自己造的：
@@ -238,6 +267,7 @@ scipy 的 `reflect` 指的是**含边缘**的对称填充，跟 numpy 的 `refle
 见 [PROGRESS.md](PROGRESS.md)。
 
 - 2026-10-21　推送至新仓库 GitHub `wanzi-qz/wanzi-myimg`；局域网 8501 放行（防火墙规则 `myimg-streamlit-8501`）；cloudflared 公网隧道 + `tools/start_demo.bat` / `stop_demo.bat` 一键启停；根目录 `requirements.txt` 对齐 Cloud 部署口径。
+- 2026-10-21　加 GitHub Actions CI（`.github/workflows/ci.yml`）：796 条回归 + 112 组全量对拍 + `tools/ci_check.py` 门禁（判定 / 组数 / 依赖基线三查）；依赖钉死在 `requirements-ci.txt`，报告与对比图存产物 14 天。
 
 ## License
 

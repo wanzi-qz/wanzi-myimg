@@ -4,7 +4,7 @@
 |---|---|
 | 适用代码 | GitHub `wanzi-qz/wanzi-myimg`，commit `111bc52` 及以后 |
 | 文档日期 | 2026-10-21 |
-| 测试基线 | 全仓 777 passed / 0 failed |
+| 测试基线 | 全仓 796 passed / 0 failed |
 | 对拍基线 | numpy 1.26.4 / opencv-python 4.10.0 / scikit-image 0.25.2（2026-10-18 本机实测） |
 | 对拍规模 | 15 个算子、17 条对拍口径（含实现变体）× 12 个合成用例，共 112 组 |
 
@@ -32,7 +32,7 @@ OpenCV 和 scikit-image 是行业事实基准，但拿它们当"标准答案"时
 并把"差在哪、差多少"画出来。** 它同时是三样东西：
 
 - **验收台**：每个算子 × 每个用例给出判定（逐像素精确 / 浮点噪声级一致 / 超出容差 / 仅记录），
-  回归测试 777 条守着不让它退化。
+  回归测试 796 条守着不让它退化。
 - **教学台**：参数滑块 + 2×2 画布 + 信息格（边缘叠加、差值热图、直方图、CDF、连通域柱状），
   改一个参数立刻看到算子行为怎么变。
 - **交付物**：桌面 exe 双击即用、Web 版公网链接可分享、CLI 一键出对拍报告。
@@ -90,7 +90,7 @@ OpenCV 和 scikit-image 是行业事实基准，但拿它们当"标准答案"时
 | `gui/app.py` | Tkinter 桌面版（对共用模块只做 re-export） |
 | `web/app.py` | Streamlit Web 版（控件层，零业务逻辑） |
 | `tools/` | build_exe.py 打包、start_demo / stop_demo 一键启停 |
-| `tests/` | 777 条回归（含"掐掉 tkinter 再 import web.app"的隔离测试） |
+| `tests/` | 796 条回归（含"掐掉 tkinter 再 import web.app"的隔离测试） |
 
 ### 2.3 一次交互的完整数据流
 
@@ -245,6 +245,37 @@ W:\Anaconda\python.exe -m venv .venv-pack
 
 可选：`--onedir`（启动快，整文件夹分发）、`--console`（留控制台看 traceback）。
 
+### 3.6 CI：push 之后谁在替你跑
+
+`.github/workflows/ci.yml`，ubuntu-latest + Python 3.12，push / PR / 手动都触发。
+两道门串在同一个 job 里：
+
+| 门 | 命令 | 拦什么 |
+|---|---|---|
+| 回归 | `python -X utf8 -m pytest` | 796 条测试，代码写错就红 |
+| 对拍 | `run_compare.py --all --figures` → `tools/ci_check.py` | 112 组判定有没有变红、组数够不够、依赖基线有没有漂 |
+
+`ci_check.py` 存在的理由有两条，都是这个项目最容易 silently 坏掉的地方：
+
+1. **`run_compare` 是报告工具，不是裁判。** 出现「超出容差」它只打印一行 `[待查]`
+   然后 exit 0。人在终端前会看见，CI 里没人看见，等于没跑。红牌得有人举。
+2. **判定强依赖上游库的实现细节。** numpy 从 1.26 升到 2.x，浮点结合序一变，
+   「浮点噪声级一致」可能就成了「超出容差」，而这跟代码对错毫无关系。
+   `compare.json` 里存了 env，正好拿来和 `requirements-ci.txt` 的钉子逐个对
+   （opencv 特殊：pip 报四段 `4.10.0.84`，`cv2.__version__` 只报三段 `4.10.0`，
+   取前三段比，不然会因为构建号误报）。
+
+另外还数一下 rows：`--op` / `--case` 名字打错时，`run_compare` 会安静地跑出 0 组、
+exit 0，看着像全绿。低于 100 组就报错。
+
+依赖钉死版本而不是 `>=`，同一个道理：对拍项目的 CI 一旦因为上游升级天天报红，
+红就没人再看了，等于没有 CI。要升基线，按 `requirements-ci.txt` 顶上那段流程走
+（本机先升 → 全量 pytest + run_compare → 确认判定措辞没变 → 同步改钉子和文档基线表）。
+
+产物 `compare-report` 保留 14 天，`if: always()`——红了也要传，出问题时第一手要看的
+就是这份报告。门禁脚本自己也有 19 条回归（`tests/test_ci_check.py`），
+防止它坏了却一路 exit 0、CI 天天绿其实什么都没查。
+
 ---
 
 ## 4. 使用方法
@@ -342,7 +373,7 @@ t_mine / t_ref 都是 repeats 次取最小；slowdown = t_mine / t_ref。
    若发现不一样，是 bug，提 issue。
 5. **能在没有显示环境的服务器跑吗？** 能。Web 版 matplotlib 走 Agg；CLI 纯计算；
    GUI 才需要显示环境（或 exe）。
-6. **测试 777 条都测什么？** 算子数值回归、参数表与签名对齐、engine 全算子不抛异常、
+6. **测试 796 条都测什么？** 算子数值回归、参数表与签名对齐、engine 全算子不抛异常、
    render 全信息格不崩、扫描取值四规则、主题色 token、GIF 组帧、web 隔离 tkinter、
    打包路径四态与 build_exe 命令行捕获等。
 7. **换 OpenCV 版本会怎样？** 浮点噪声级差异可能变化（verdict 仍在容差内）；

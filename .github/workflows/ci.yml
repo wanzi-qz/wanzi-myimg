@@ -1,0 +1,85 @@
+# CI：push / PR 自动跑「777 条回归 + 112 组对拍」，并把对拍报告当产物存下来。
+#
+# 为什么要有这条流水线：这个仓库的结论（逐像素精确 / 超出容差）全靠测试和 run_compare
+# 撑着，而它现在是公开库、网页端也能直接改。手动跑测试这件事，只要有一次忘了，
+# 后面就都不会再跑。所以判定交给机器。
+#
+# 两道门，缺一不可：
+#   1) pytest 全量         —— 单元/契约/GUI/Web 回归，红就是代码错了；
+#   2) run_compare + ci_check —— 全量对拍一遍，再核对判定措辞和依赖基线有没有漂。
+#      run_compare 自己是 exit 0 的报告工具，红牌由 tools/ci_check.py 举。
+#
+# 依赖全部钉死在 requirements-ci.txt（和 docs/user_guide.md 的基线表一致），
+# 不让 pip 顺手升级 numpy 把容差口径带跑。
+
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+# 同一个分支连着 push 时，把还在跑的旧任务掐掉，省 Actions 分钟数
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  bench:
+    name: 回归 + 对拍基线 (Python 3.12 / ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"          # 和本机 3.12.3 同一个次版本
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+
+      # opencv-python 完整版在 Linux 上要 libGL 和 glib；tests/test_gui_engine.py 会
+      # import gui.app（模块级 import tkinter），要 tk 运行库。
+      # ubuntu-24.04 上 libglib2.0-0 是过渡包，装不上就退到 t64 那个名字。
+      - name: 装系统库
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0 python3-tk \
+            || sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0t64 python3-tk
+
+      - name: 装依赖（钉死版本）
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-ci.txt
+          python -m pip install -e . --no-deps
+
+      # 出了版本相关的怪问题，第一步就是回看这几行：CI 装的到底是不是基线那一套
+      - name: 打印实际版本
+        run: |
+          python --version
+          python -m pip list --format=freeze | grep -Ei "^(numpy|opencv-python|scikit-image|matplotlib|pandas|pillow|streamlit|pytest)="
+
+      - name: pytest 全量
+        run: python -X utf8 -m pytest
+
+      - name: 全量对拍 + 门禁
+        run: |
+          python -X utf8 benchmarks/run_compare.py --all --figures
+          python -X utf8 tools/ci_check.py --expect-python 3.12
+
+      # 红了也要传：出问题时第一手要看的就是这份报告
+      - name: 上传对拍报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: compare-report
+          path: |
+            benchmarks/out/compare.md
+            benchmarks/out/compare.json
+            benchmarks/out/fig_*.png
+          if-no-files-found: warn
+          retention-days: 14

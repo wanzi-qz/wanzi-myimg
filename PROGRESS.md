@@ -1,6 +1,6 @@
 # 进度与验收
 
-更新：2026-10-21 00:45　|　测试：777 passed / 0 failed　|　对拍：112 组（1.26.4 / cv2 4.10.0 / skimage 0.25.2）
+更新：2026-10-21 02:25　|　测试：796 passed / 0 failed　|　对拍：112 组（1.26.4 / cv2 4.10.0 / skimage 0.25.2）
 
 图例：✅ 对拍通过　🟡 口径不同、差异已记录不追求一致　❌ 待查
 
@@ -71,6 +71,13 @@
       = 没漏模块；每次打包后先体检再交付（windowed 崩了没控制台可看）
 - [x] `grab_frame` 从 web/app.py 搬到 `gui/anim.py`：桌面扫描缓存帧、web 下载按钮、
       exe 自检三处共用一份
+- [x] CI（GitHub Actions `.github/workflows/ci.yml`）：push / PR / 手动触发，
+      ubuntu-latest + Python 3.12，两道门：796 条回归 + 112 组全量对拍；
+      门禁 `tools/ci_check.py` 管三件事——BAD_VERDICTS 判红（run_compare 自己 exit 0，
+      红牌得有人举）、组数下限 100（op/case 名字打错会安静跑出 0 组）、
+      compare.json 的 env 对 `requirements-ci.txt` 钉子（opencv 四段 vs 三段取前缀比）；
+      另加 19 条 `tests/test_ci_check.py` 守门禁自己。依赖全部钉死版本，
+      产物 compare-report 存 14 天（`if: always()`）
 
 ## 已知差异（不粉饰，全部写在 compare.md 第 4 节）
 

@@ -1,0 +1,24 @@
+# CI 的依赖口径 —— 与 docs/user_guide.md 开头那张「对拍基线」表逐字对应，
+# 也就是本机 Anaconda 环境（Python 3.12.3）里实际跑绿 777 条测试的那一套。
+#
+# 为什么全部钉死版本、不用 >=：
+#   这是个对拍项目，判定结论（逐像素精确 / 浮点噪声级一致 / 超出容差）取决于上游库的
+#   具体实现。numpy 升 2.x、scikit-image 换插值实现，容差口径就会漂，CI 会天天报红
+#   但代码一行没错 —— 这种红没人会认真看，等于没有 CI。
+#   tools/ci_check.py 会拿 compare.json 里的 env 和这里的钉子对一遍，漂了就举红牌。
+#
+# 想升级基线的正确姿势：
+#   本机先升 -> 跑全量 pytest + run_compare --all -> 确认判定措辞没变（变了就去
+#   PROGRESS.md 归因）-> 同步改这个文件、docs/user_guide.md 的基线表、PROGRESS.md 抬头。
+#
+# 本机 Windows 用 opencv-python 完整版；CI 的 Linux runner 也用完整版，
+# 缺的 libGL / glib 由 workflow 里的 apt 步骤补，保证两边是同一个包。
+
+numpy==1.26.4
+opencv-python==4.10.0.84
+scikit-image==0.25.2
+matplotlib==3.9.2
+pandas==2.2.2
+pillow==10.4.0
+streamlit==1.37.1
+pytest==7.4.4
