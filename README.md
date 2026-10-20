@@ -85,11 +85,15 @@ Tkinter + matplotlib，零额外依赖（tkinter 是标准库，matplotlib 已�
 （误差 / 耗时 / 口径说明 / 坑提示）。配色对齐个人站 wanzi.me 的设计变量：
 黑底 `#070707` + 强调金 `#d8b46a`，matplotlib 信息格走同一套暗色 rcParams，
 导出 PNG 与屏幕同色。左栏「参数扫描」卡任选一个参数点与帧数，开始后画布
-逐帧刷新放动画，结束在状态区给出这一轮的取值区间与空帧说明。
+逐帧刷新放动画，结束在状态区给出这一轮的取值区间与空帧说明；帧顺路按 960 宽
+缓存，扫完（或中途停止）点「存 GIF」导出循环动图，帧间隔与屏幕同为 150ms，
+调色板由全帧马赛克 + 主题标准色块统一量化，不闪也不碾彩线。
 
 ![canny 边缘叠加](gui_preview_canny.png)
 
 ![连通域外接框 + 面积对比](gui_preview_stats.png)
+
+![参数扫描动画：canny 预平滑 σ 从 0 扫到 3](gui_preview_sweep.gif)
 
 设计上有两条硬规矩：
 
@@ -103,7 +107,7 @@ Tkinter + matplotlib，零额外依赖（tkinter 是标准库，matplotlib 已�
 回归测试在 `tests/test_gui_engine.py`：参数表 key 与 myimg 签名逐条对齐、
 全算子 × 默认参数 engine 不抛异常、全信息格视图 render 不崩（Agg 后端，不弹窗）；
 扫描取值序列（choice 原序 / 舍入去重 / odd 保奇 / steps 兜底）与暗色主题色token
-也各有回归项，全仓 747 条测试全绿。
+也各有回归项，全仓 748 条测试全绿。
 
 ## 对标口径（2026-10-18 本机实测，numpy 1.26.4 / opencv-python 4.10.0 / scikit-image 0.25.2）
 

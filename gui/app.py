@@ -17,6 +17,7 @@ engine.run() -> render.draw() -> 状态区刷新。自动刷新关掉时只更�
 
 参数扫描是另一条路：_sweep_tick 每帧改一个参数值后直接 _recompute()（不经过防抖），
 画布逐帧刷新，扫完把该指标的 min~max 写进状态区。取值序列由 params.sweep_sequence 给。
+帧会顺路缩到 960 宽缓存，扫完（或中途停止）点「存 GIF」导出循环动图，帧间隔与屏幕一致。
 """
 
 from __future__ import annotations
@@ -84,6 +85,36 @@ def _blend(fg: str, bg: str, a: float) -> str:
     """把 fg 按透明度 a 混到 bg 上，返回十六进制色。"""
     f, b = _hex_rgb(fg), _hex_rgb(bg)
     return "#%02x%02x%02x" % tuple(int(round(b[i] + (f[i] - b[i]) * a)) for i in range(3))
+
+
+def assemble_gif(frames, path, duration_ms: int = FRAME_MS) -> int:
+    """把一列 PIL 帧写成循环 GIF，返回文件字节数。
+
+    调色板取自「全部帧缩略图拼成的马赛克」：只用第一帧的话，万一首帧色少
+    （比如纯色用例），后面帧的颜色会被量化碾平、帧间全同被 PIL 并帧；
+    各帧独立调色板又会闪。马赛克用最近邻取样、再贴上主题与渲染强调色的
+    标准色块，1px 细彩线也不会在取色时丢。不加抖动——界面本来就是大平色块，
+    抖出来的噪点只会把体积撑大。
+    """
+    from PIL import Image
+    thumbs = [f.convert("RGB").resize((64, 40), Image.NEAREST) for f in frames]
+    swatches = [THEME[k] for k in ("bg", "panel", "ink", "muted", "gold")] + [
+        render._C_MINE, render._C_REF, render._C_INPUT] + [
+        "#%02x%02x%02x" % tuple(round(c * 255) for c in rgb)
+        for rgb in (render._C_EDGE_MINE, render._C_EDGE_REF, render._C_EDGE_BOTH)]
+    strip = Image.new("RGB", (64 * len(thumbs) + 16 * len(swatches), 40))
+    x = 0
+    for t in thumbs:
+        strip.paste(t, (x, 0))
+        x += 64
+    for c in swatches:
+        strip.paste(Image.new("RGB", (16, 40), c), (x, 0))
+        x += 16
+    pal = strip.quantize(colors=256, dither=Image.NONE)
+    q = [f.convert("RGB").quantize(palette=pal, dither=Image.NONE) for f in frames]
+    q[0].save(path, save_all=True, append_images=q[1:],
+              duration=int(duration_ms), loop=0, optimize=True)
+    return pathlib.Path(path).stat().st_size
 
 
 def _pick_family(root, candidates, fallback: str) -> str:
@@ -316,6 +347,8 @@ class App:
         self._sweep_seq: list = []
         self._sweep_i = 0
         self._sweep_rows: list = []
+        self._sweep_frames: list = []      # GIF 帧：扫描途中逐帧缩到 960 宽存着
+        self._sweep_meta: tuple | None = None
 
         self.auto_var = tk.BooleanVar(value=True)
         self.variant_var = tk.StringVar(value="vector")
@@ -463,6 +496,10 @@ class App:
         self.sweep_btn = ttk.Button(sf, text="开始扫描", style="Gold.TButton", width=10,
                                     command=self._toggle_sweep)
         self.sweep_btn.grid(row=1, column=0, columnspan=2, sticky="w", pady=(7, 0))
+        self.sweep_gif_btn = ttk.Button(sf, text="存 GIF", width=10, state="disabled",
+                                        command=self._save_sweep_gif)
+        self.sweep_gif_btn.grid(row=1, column=2, columnspan=2, sticky="w",
+                                padx=(8, 0), pady=(7, 0))
         ttk.Label(sf, textvariable=self.sweep_info_var, style="Card.Faint.TLabel",
                   width=36, anchor="w", justify="left").grid(
             row=2, column=0, columnspan=4, sticky="w", pady=(6, 0))
@@ -643,7 +680,7 @@ class App:
                         labels[0])
             self.sweep_var.set(pref)
         self.sweep_btn.configure(state="normal")
-        self.sweep_info_var.set("选好参数点「开始扫描」，画布逐帧刷新")
+        self.sweep_info_var.set("选好参数点「开始扫描」，画布逐帧刷新；扫完可存 GIF")
 
     def _on_scale(self, p: P.Param, val: str, entry: ttk.Entry):
         try:
@@ -800,6 +837,12 @@ class App:
         self._sweep_i = 0
         self._sweep_rows = []
         self._sweep_empty = 0
+        self._sweep_frames = []
+        self._sweep_meta = (self.cur_op, p.key)
+        try:
+            self.sweep_gif_btn.configure(state="disabled")
+        except tk.TclError:
+            pass
         self._sweep_active = True
         self.sweep_btn.configure(text="停止")
         self._sweep_tick()
@@ -826,7 +869,39 @@ class App:
         shown = render._fmt(val) if val is not None else "-"
         self.sweep_info_var.set(f"{p.label}={self._fmt_sweep_v(p, v)}　"
                                 f"{self._sweep_i}/{len(self._sweep_seq)}　{name} {shown}")
+        self._capture_sweep_frame()
         self._sweep_after = self.root.after(FRAME_MS, self._sweep_tick)
+
+    def _capture_sweep_frame(self):
+        """把当前画布截成一帧 GIF 素材（缩到 960 宽，控体积也控内存）。"""
+        try:
+            from PIL import Image
+            self.canvas.draw()   # render.draw 走 draw_idle 是异步的，取帧前强制同步渲染一次
+            im = Image.fromarray(np.array(self.canvas.buffer_rgba())[:, :, :3])
+        except Exception:
+            return
+        w = 960
+        h = max(1, round(im.height * w / im.width))
+        self._sweep_frames.append(im.resize((w, h), Image.LANCZOS))
+        if len(self._sweep_frames) >= 2:
+            try:
+                self.sweep_gif_btn.configure(state="normal")
+            except tk.TclError:
+                pass
+
+    def _save_sweep_gif(self):
+        frames = self._sweep_frames
+        if len(frames) < 2:
+            return
+        op = self._sweep_meta[0] if self._sweep_meta else self.cur_op
+        path = filedialog.asksaveasfilename(
+            defaultextension=".gif", filetypes=[("GIF 动图", "*.gif")],
+            initialfile=f"sweep_{op}.gif", title="保存扫描动画")
+        if not path:
+            return
+        n = assemble_gif(frames, path, FRAME_MS)
+        self._status_append(f"扫描动画已存：{path}（{len(frames)} 帧，"
+                            f"{FRAME_MS} ms/帧，{n / 1024:.0f} KB）\n", "ok")
 
     def _finish_sweep(self):
         p = self._sweep_param_def
@@ -863,6 +938,12 @@ class App:
         if btn is not None:
             try:
                 btn.configure(text="开始扫描")
+            except tk.TclError:
+                pass
+        gif = getattr(self, "sweep_gif_btn", None)
+        if gif is not None and len(self._sweep_frames) >= 2:
+            try:
+                gif.configure(state="normal")
             except tk.TclError:
                 pass
 

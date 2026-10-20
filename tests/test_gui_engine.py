@@ -162,3 +162,18 @@ def test_app_theme_tokens_and_blend():
     assert A._blend("#ffffff", "#000000", 0.5) == "#808080"
     assert A._blend("#d8b46a", "#070707", 0.0) == "#070707"
     assert A._blend("#d8b46a", "#070707", 1.0) == "#d8b46a"
+def test_assemble_gif_frames_palette_and_duration(tmp_path):
+    from PIL import Image
+    from gui import app as A
+    frames = [Image.new("RGB", (48, 32), c)
+              for c in ((7, 7, 7), (216, 180, 106), (243, 243, 241))]
+    out = tmp_path / "s.gif"
+    n = A.assemble_gif(frames, str(out), 120)
+    assert n == out.stat().st_size and n > 0
+    im = Image.open(out)
+    assert getattr(im, "n_frames", 1) == 3
+    assert im.info.get("duration") == 120
+    # 统一调色板：第二帧取回来应该还是强调金，不允许各帧各自量化跑色
+    im.seek(1)
+    r, g, b = im.convert("RGB").getpixel((0, 0))
+    assert abs(r - 216) <= 2 and abs(g - 180) <= 2 and abs(b - 106) <= 2
