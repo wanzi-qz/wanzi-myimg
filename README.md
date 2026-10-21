@@ -5,6 +5,8 @@
 纯NumPy手写常用图像处理算子，逐个与 OpenCV/scikit-image 对拍，把误差、耗时、差异原因都记下来。
 
 > 📖 完整产品使用说明（背景 / 原理 / 操作 / 结果解释 / FAQ）：[docs/user_guide.md](docs/user_guide.md)
+>
+> 🌐 在线试用（浏览器直接跑，不用装环境）：**[wanzi-myimg.streamlit.app](https://wanzi-myimg.streamlit.app/)**
 
 ## 为什么做这个
 
@@ -198,6 +200,7 @@ exe 还认一个 `--selftest`：不开窗口，把滤波 / 阈值 / 边缘 / 连
 
 ## 在线演示（Streamlit Community Cloud）
 
+- 线上地址：**[https://wanzi-myimg.streamlit.app/](https://wanzi-myimg.streamlit.app/)**，已按下面三步部署完成，点开就能用（免费档闲置会睡眠，首次访问要等十几秒唤醒）。
 - 依赖口径见根目录 `requirements.txt`（opencv 用 headless：云端没有 GUI 库）。
 - 部署三步：https://share.streamlit.io 用 GitHub 登录 → New app →
   Repository `wanzi-qz/wanzi-myimg`、Branch `master`、Main file path `web/app.py` → Deploy。
