@@ -1,20 +1,62 @@
-# myimg
+# wanzi-myimg
 
 [![CI](https://github.com/wanzi-qz/wanzi-myimg/actions/workflows/ci.yml/badge.svg)](https://github.com/wanzi-qz/wanzi-myimg/actions/workflows/ci.yml)
-
-纯NumPy手写常用图像处理算子，逐个与 OpenCV/scikit-image 对拍，把误差、耗时、差异原因都记下来。
 
 > 📖 完整产品使用说明（背景 / 原理 / 操作 / 结果解释 / FAQ）：[docs/user_guide.md](docs/user_guide.md)
 >
 > 🌐 在线试用（浏览器直接跑，不用装环境）：**[wanzi-myimg.streamlit.app](https://wanzi-myimg.streamlit.app/)**
 
-## 为什么做这个
+## 介绍
 
-有些图像算子属于会调、但是说不清里面在算什么。
-这个仓库就是把它们拆开重写：高斯滤波到底怎么卷的、Otsu 的类间方差在遍历什么、
-Canny的非极大值抑制为什么要对幅值插值。写完再跟工业标准库对拍，
-误差对不上就必须找到原因，不用差不多就行糊过去。
-目的是把每个算子的原理和实现细节弄清楚。
+图像处理开发里有一批算子属于"会调、但说不清里面在算什么"：高斯滤波到底怎么卷的、
+Otsu 的类间方差在遍历什么、Canny 的非极大值抑制为什么要对幅值插值。只会调包，遇上
+边界效应、数值对不上，就只能黑盒猜。
+
+本项目把常用图像算子用**纯 NumPy 手写重实现**（`myimg/` 实现区禁止 import
+cv2 / scipy / skimage），逐个与 OpenCV / scikit-image 在 **12 个固定种子合成用例**
+（含荧光显微合成图）上对拍：误差、耗时、差异原因全部记录；对不上的误差不跳过，
+必须找到原因写进差异归因，不允许"差不多就糊过去"。在同一套计算核之上提供三个入口：
+命令行、Tkinter 桌面对拍台、Streamlit 浏览器对拍台，另打包成免安装的单文件 exe。
+
+结果：**15 个算子 + 4 个朴素对照实现 + 积分图版**，**112 组对拍**全部通过或明确记录
+口径差异（如 CLAHE 三家实现口径不同，只记录、不硬凑一致）；**796 条 pytest** 与
+CI 门禁（判定红绿 / 组数 / 依赖版本三查）守住"库一升级、容差口径跟着漂"这类
+最容易静默坏掉的问题。
+
+## 项目贡献
+
+- **"手写"可验证而非口头承诺**：实现区零第三方数值库依赖；基准（cv2 / skimage）只允许
+  出现在 `tests/`、`benchmarks/`、`gui/` 应用层，由 CI 全量对拍守住这条纪律。
+- **口径差异逐条归因**：每个数字都能在 `compare.json` 里找到出处；标定出三家库的
+  边界模式命名对照、核归一化、平局约定等事实（见下方实测记录）。
+- **一套计算核三个入口**：GUI / Web / CLI 共用 `gui/engine.py` 与判定口径
+  `benchmarks.run_compare.compare_one`——不存在"报告说通过、界面说不通过"。
+- **CI 门禁而非报告工具**：`tools/ci_check.py` 判红绿、查组数、对依赖基线；
+  报告与 15 张对比图存产物 14 天，红了也要传。
+
+## 测试用例
+
+对拍不用真实照片起头：`benchmarks/cases.py` 提供 **12 个固定种子合成用例**
+（渐变、噪声、周期纹理、荧光显微合成图等），输入完全可复现，误差才可归因。
+真实图片通过 GUI / Web / CLI 传入，走同一套判定口径；`data/` 真实图片不入库。
+
+## 实验环境
+
+本机对拍基线：numpy 1.26.4 / opencv-python 4.10.0 / scikit-image 0.25.2
+（Windows + Anaconda）；CI 为 ubuntu-latest + Python 3.12。依赖全部钉死在
+`requirements-ci.txt`，与本机环境、文档里的"对拍基线"逐字对应，不让 pip 顺手升级。
+
+## 进度
+
+完整验收清单（17 个算子级条目的对拍状态、误差、耗时与关键点一表全览）见
+[PROGRESS.md](PROGRESS.md)。
+
+- 2026-10-21　推送至 GitHub `wanzi-qz/wanzi-myimg`；局域网 8501 放行（防火墙规则
+  `myimg-streamlit-8501`）；cloudflared 公网隧道 + `tools/start_demo.bat` /
+  `stop_demo.bat` 一键启停；根目录 `requirements.txt` 对齐 Cloud 部署口径。
+- 2026-10-21　加 GitHub Actions CI（`.github/workflows/ci.yml`）：796 条回归 +
+  112 组全量对拍 + `tools/ci_check.py` 门禁（判定 / 组数 / 依赖基线三查）；
+  依赖钉死在 `requirements-ci.txt`，报告与对比图存产物 14 天。
 
 ## 目录
 
@@ -44,7 +86,7 @@ web/              浏览器版对拍台（Streamlit，同一套 engine / render 
 tools/            gui_main.py（exe 入口，认 --selftest 自检）+ build_exe.py（打包脚本）
 notes/            报错本、默写记录
 data/             真实图片放这里（已 gitignore，只留 README）
-PROGRESS.md       验收清单 + 面试复述清单
+PROGRESS.md       验收清单 + 复述清单
 ```
 
 ## 手写纪律
@@ -191,6 +233,7 @@ exe 还认一个 `--selftest`：不开窗口，把滤波 / 阈值 / 边缘 / 连
 得 `--hidden-import` 兜住；`myimg` 和 `benchmarks` 两个包都要 `--collect-submodules`，
 否则打完一调判定就 ModuleNotFoundError。`build/`、`dist/`、`*.spec` 都在 .gitignore 里，
 不入库。
+
 ## 一键启动 / 停止（Windows 双击即用）
 
 - 启动：双击 `tools/start_demo.bat`。8501 没起就拉 streamlit，再起 cloudflared 公网隧道，
@@ -234,7 +277,10 @@ python benchmarks/run_compare.py --all --figures
 python tools/ci_check.py --expect-python 3.12
 ```
 
-## 对标口径（2026-10-18 本机实测，numpy 1.26.4 / opencv-python 4.10.0 / scikit-image 0.25.2）
+## 实测记录：口径标定与对拍结论
+
+（2026-10-18 本机实测，numpy 1.26.4 / opencv-python 4.10.0 / scikit-image 0.25.2。
+每个算子的对拍状态、误差与耗时表见 [PROGRESS.md](PROGRESS.md)。）
 
 对拍之前先把口径对齐，否则误差全是自己造的：
 
@@ -264,13 +310,6 @@ scipy 的 `reflect` 指的是**含边缘**的对称填充，跟 numpy 的 `refle
 - `cv2.Canny` 只收 CV_8U 且没有 sigma 参数，工业链路是 `GaussianBlur(uint8) -> Canny`，
   那条链路的 uint8 取整让「带预平滑的 Canny」没法逐像素对拍，只记录 IoU。
 - Otsu 在全部 12 个用例上和 cv2 **完全相等**；测试仍留 ±1 容差是给平局约定分叉留的余量。
-
-## 进度
-
-见 [PROGRESS.md](PROGRESS.md)。
-
-- 2026-10-21　推送至新仓库 GitHub `wanzi-qz/wanzi-myimg`；局域网 8501 放行（防火墙规则 `myimg-streamlit-8501`）；cloudflared 公网隧道 + `tools/start_demo.bat` / `stop_demo.bat` 一键启停；根目录 `requirements.txt` 对齐 Cloud 部署口径。
-- 2026-10-21　加 GitHub Actions CI（`.github/workflows/ci.yml`）：796 条回归 + 112 组全量对拍 + `tools/ci_check.py` 门禁（判定 / 组数 / 依赖基线三查）；依赖钉死在 `requirements-ci.txt`，报告与对比图存产物 14 天。
 
 ## License
 
